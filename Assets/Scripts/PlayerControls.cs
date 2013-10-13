@@ -19,13 +19,13 @@ public class PlayerControls : MonoBehaviour {
 	}
 	
 	void GetInput(){
-		dPadInput = new Vector2(DPad.horizontal * 2 + 2, DPad.vertical * 2);
+		dPadInput = new Vector2(DPad.horizontal * 5 + 3, DPad.vertical * 5);
 	}
 	
 	[RPC] void SetPosition(Vector3 rpcInput){
 		transform.position = rpcInput;
 		if(Network.isClient){
-			SetPosition(rpcInput);
+			networkView.RPC("SetPosition", RPCMode.Server, rpcInput);
 		}
 	}
 }
