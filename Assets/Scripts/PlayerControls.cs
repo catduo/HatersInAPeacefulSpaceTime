@@ -24,10 +24,10 @@ public class PlayerControls : MonoBehaviour {
 		dPadInput = new Vector2(DPad.horizontal * 5 + 3, DPad.vertical * 5);
 	}
 	
-	[RPC] void SetPosition(Vector3 rpcInput){
+	void SetPosition(Vector3 rpcInput){
 		transform.position = rpcInput;
-		if(Network.isClient){
+		/*if(Network.isClient){
 			networkView.RPC("SetPosition", RPCMode.Server, rpcInput);
-		}
+		}*/
 	}
 }
