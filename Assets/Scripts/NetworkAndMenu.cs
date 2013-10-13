@@ -17,9 +17,10 @@ public class NetworkAndMenu : MonoBehaviour {
 	static public bool is_gameOver = false;
 	private bool is_credits = false;
 	public Font font;
+	public GameObject playerObject;
 	 
 	private void StartServer(){
-	    Network.InitializeServer(1, 25000, !Network.HavePublicAddress());
+	    Network.InitializeServer(32, 25000, !Network.HavePublicAddress());
 	    MasterServer.RegisterHost(typeName, gameName);
 	}
 	
@@ -39,27 +40,6 @@ public class NetworkAndMenu : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(is_connecting){
-			CheckConnections();
-		}
-	}
-	void CheckConnections(){
-		if(Network.connections.Length == 0){
-			if(retryTime + lastTry < Time.time){
-				RefreshHostList();
-				if(hostList.Length > 0){
-					JoinServer(hostList[0]);
-					is_menu = false;
-				}
-				else{
-					lastTry = Time.time;
-					is_menu = true;
-				}
-			}
-		}
-		else if (Network.connections.Length > 0){
-			is_connecting = false;
-		}
 	}
 	
 	private HostData[] hostList = new HostData[] {};
@@ -71,6 +51,16 @@ public class NetworkAndMenu : MonoBehaviour {
 	void OnMasterServerEvent(MasterServerEvent msEvent){
 	    if (msEvent == MasterServerEvent.HostListReceived){
 	        hostList = MasterServer.PollHostList();
+			if(is_connecting){
+				Debug.Log ("try to connect");
+				if(hostList.Length > 0){
+					JoinServer(hostList[0]);
+					is_menu = false;
+				}
+				else{
+					RefreshHostList();
+				}
+			}
 		}
 	}
 	private void JoinServer(HostData hostData){
@@ -79,6 +69,9 @@ public class NetworkAndMenu : MonoBehaviour {
 	 
 	void OnConnectedToServer(){
 	    Debug.Log("Server Joined");
+		is_menu = false;
+		is_connecting = false;
+		Network.Instantiate(playerObject, Vector3.zero, Quaternion.identity, 0);
 	}
 	
 	void OnGUI(){
@@ -136,6 +129,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	            is_online = true;
 				is_connecting = true;
 				is_decidingToHost = false;
+				RefreshHostList();
 			}
 	        if (GUI.Button(new Rect(350, 200, 150, 50), "Host as Server")){
 				StartServer();

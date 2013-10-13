@@ -13,9 +13,11 @@ public class PlayerControls : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		GetInput();
-		thisPosition = new Vector3(dPadInput.x, dPadInput.y, 0);
-		SetPosition(thisPosition);
+		if(networkView.isMine){
+			GetInput();
+			thisPosition = new Vector3(dPadInput.x, dPadInput.y, 0);
+			SetPosition(thisPosition);
+		}
 	}
 	
 	void GetInput(){

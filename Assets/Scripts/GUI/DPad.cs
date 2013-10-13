@@ -17,7 +17,6 @@ public class DPad : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Debug.Log(horizontal.ToString() + "," + vertical.ToString());
 		if(heldPrevious){
 			vertical = (GameState.InputXYs[0].y - transform.position.y) / transform.lossyScale.z * 0.2F;
 			horizontal = (GameState.InputXYs[0].x - transform.position.x) / transform.lossyScale.x * 0.2F;
