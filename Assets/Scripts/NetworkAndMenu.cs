@@ -26,6 +26,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	
 	void OnServerInitialized(){
 	    Debug.Log("Server Initializied");
+		Network.SetSendingEnabled(0, false);
 	}
 	
 	public void Disconnect () {
@@ -36,10 +37,19 @@ public class NetworkAndMenu : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		lastTry = Time.time;
+		if(Application.loadedLevelName == "Game"){
+			is_hosting = true;
+			StartServer();
+			is_online = true;
+			is_decidingToHost = false;
+			is_menu = false;
+		}
 	}
 	
-	// Update is called once per frame
-	void Update () {
+	void OnDisconnectedFromServer(NetworkDisconnection info){
+		is_menu = true;
+		is_online = false;
+		GameObject.Find ("MainCamera").GetComponent<FollowCharacter>().StopCharacterFollow();
 	}
 	
 	private HostData[] hostList = new HostData[] {};
@@ -74,9 +84,21 @@ public class NetworkAndMenu : MonoBehaviour {
 		Network.Instantiate(playerObject, Vector3.zero, Quaternion.identity, 0);
 	}
 	
+	void OnPlayerDisconnected(NetworkPlayer player)
+    {
+       Network.RemoveRPCs(player);
+       Network.DestroyPlayerObjects(player);
+    }
+	
 	void OnGUI(){
 		GUI.skin.font = font;
-		if(is_gameOver){
+		if (is_hosting){
+			if (GUI.Button(new Rect(0, 0, 100, 50), "Stop")){
+				Disconnect();
+				Application.LoadLevel("Controller");
+			}
+		}
+		else if(is_gameOver){
 			GUI.Box(new Rect(300,100,250,100), "Game Over");
 			if (GUI.Button(new Rect(300,300,250,100), "Main Menu")){
 				is_gameOver = false;
@@ -132,10 +154,11 @@ public class NetworkAndMenu : MonoBehaviour {
 				RefreshHostList();
 			}
 	        if (GUI.Button(new Rect(350, 200, 150, 50), "Host as Server")){
-				StartServer();
-				is_online = true;
+				Application.LoadLevel("Game");
+			}
+	        if (GUI.Button(new Rect(350, 300, 150, 50), "Back")){
 				is_decidingToHost = false;
-				is_menu = false;
+				is_menu = true;
 			}
 		}
 		else if(is_menu){
@@ -162,14 +185,12 @@ public class NetworkAndMenu : MonoBehaviour {
 					AudioListener.volume = 1;
 				}
 			}
-		}
-	    else if (GUI.Button(new Rect(0, 0, 100, 50), "Menu")){
-			if(is_menu){
+		    if (GUI.Button(new Rect(0, 0, 100, 50), "Menu")){
 				is_menu = false;
 			}
-			else{
-				is_menu = true;
-			}
+		}
+	    else if (GUI.Button(new Rect(0, 0, 100, 50), "Menu")){
+			is_menu = true;
 		}
 	}
 }
