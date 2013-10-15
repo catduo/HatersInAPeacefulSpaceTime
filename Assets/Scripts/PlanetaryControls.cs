@@ -1,61 +1,53 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum PlayerState {
+	Building,
+	Launching,
+	Fighting,
+	Recovering,
+	RoundEnded
+}
+
 public class PlanetaryControls: MonoBehaviour {
 	
-	public string action;
-	public string upgradeConstruct;
-	public string upgradeConstruct2;
-	public string scrollLeft;
-	public string scrollRight;
-	public string switchClock;
-	public string switchCounterClock;
+	public PlayerState thisPlayerState = PlayerState.Building;
 	
 	private Transform up;
-	private Transform down;
 	private Transform left;
 	private Transform right;
-	public Transform selected;
-	
-	public Transform statusArea;
-	
-	public float orbitSpeed;
-	public float revolutionSpeed;
+	private Transform engine;
 	
 	public float planetaryHealth = 100;
-	private Transform healthBar;
+	public float maxHealth = 100;
+	private TextMesh healthText;
+	
 	public int playerMoney = 0;
-	public TextMesh moneyText;
+	private TextMesh moneyText;
 	private float moneyRate = 1;
 	private float lastMoneyTime;
-	public int player;
-	public int otherPlayer;
+	
 	private Vector3 startPosition;
-	public bool is_remote = false;
+	private Vector3 eulerAngles;
+	private Vector2 engineFiring;
 	private bool is_client = false;
-	private bool is_gameStarted = false;
 	
 	// Use this for initialization
 	void Start () {
-		healthBar = statusArea.FindChild("HealthBar");
+		if(networkView.isMine){
+			is_client = true;
+		}
+		healthText = statusArea.FindChild("HealthBar");
 		moneyText = statusArea.FindChild("Money").GetComponent<TextMesh>();
-		healthBar.GetComponent<ProgressBar>().measureCap = planetaryHealth;
-		healthBar.GetComponent<ProgressBar>().measure = planetaryHealth;
-		startPosition = transform.position;
-		lastMoneyTime = 0;
-		if(transform.position.x < 0){
-			player = 1;
-			otherPlayer = 2;
-		}
-		else{
-			player = 2;
-			otherPlayer = 1;
-		}
+		lastMoneyTime = Time.time - moneyRate;
 		up = transform.FindChild("Up");
-		down = transform.FindChild("Down");
 		left = transform.FindChild("Left");
 		right = transform.FindChild("Right");
-		selected = up;
+		engine = transform.FindChild("Engine");
+	}
+	
+	void FixedUpdate(){
+		
 	}
 	
 	// Update is called once per frame
@@ -67,30 +59,14 @@ public class PlanetaryControls: MonoBehaviour {
 		}
 	}
 	
-	public void Remote(string remoteValue){
-		is_remote = true;
-		if(remoteValue == "client"){
-			is_client = true;
-		}
-	}	
-	public void NotRemote(string remoteValue){
-		is_remote = false;
-		if(remoteValue == "client"){
-			is_client = true;
-		}
-	}
-	
 	void Income(){
-		if(lastMoneyTime + moneyRate < Time.time){
-			playerMoney++;
-			moneyText.text = "&" + playerMoney.ToString();
-			lastMoneyTime = Time.time;
+		if(thisPlayerState == PlayerState.Fighting){
+			if(lastMoneyTime + moneyRate < Time.time){
+				playerMoney++;
+				moneyText.text = "&" + playerMoney.ToString();
+				lastMoneyTime = Time.time;
+			}
 		}
-	}
-	
-	void FixedUpdate(){
-		transform.Rotate(new Vector3(0, 0, revolutionSpeed));
-		transform.RotateAround(transform.parent.position, new Vector3(0,0,1), orbitSpeed);
 	}
 	
 	void Action() { 
