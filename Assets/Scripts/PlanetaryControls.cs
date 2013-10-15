@@ -1,4 +1,4 @@
-﻿/*using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 public class PlanetaryControls: MonoBehaviour {
@@ -283,4 +283,3 @@ public class PlanetaryControls: MonoBehaviour {
 		selected.GetComponent<Building>().Selected();
 	}
 }
- */
