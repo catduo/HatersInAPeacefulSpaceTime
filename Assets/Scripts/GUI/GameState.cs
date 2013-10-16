@@ -25,22 +25,11 @@ public class GameState : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		if(PlayerPrefs.GetInt("FTUE") != 1){
-			FTUE.ftueLocation = 100;
-		}
-		topScore = PlayerPrefs.GetInt("TopScore");
 		mainCamera = GameObject.Find("MainCamera");
-		menu = GameObject.Find("Menu");
-		ftue = GameObject.Find("FTUE");
-		scoreText = GameObject.Find("Score").GetComponent<TextMesh>();
 		drawSwipe = transform.GetComponent<LineRenderer>();
 		audioSource = transform.GetComponent<AudioSource>();
 		drawSwipe.SetVertexCount(0);
 		capsule = GameObject.Find ("SwipeCapsule");
-		highScore = GameObject.Find ("HighScore").GetComponent<TextMesh>();
-		highScore.text = "High Score: " + topScore.ToString();
-		thisScore = GameObject.Find ("ThisScore").GetComponent<TextMesh>();
-		thisScore.text = "This Round: " + score.ToString();
 		UpdateScore();
 	}
 	
@@ -168,7 +157,6 @@ public class GameState : MonoBehaviour {
 	
 	//update the score text
 	void UpdateScore () {
-		scoreText.text = score.ToString();
 	}
 	
 	//when the game ends put up a menu that lets you restart
@@ -182,7 +170,6 @@ public class GameState : MonoBehaviour {
 		PlayerPrefs.SetInt("TopScore", topScore);
 		highScore.text = "High Score: " + topScore.ToString();
 		thisScore.text = "This Round: " + score.ToString();
-		menu.SendMessage("ShowDialog");
 	}
 	
 	void Reset () {

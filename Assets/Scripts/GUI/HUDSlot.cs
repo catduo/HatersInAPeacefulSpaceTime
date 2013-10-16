@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/*using UnityEngine;
 using System.Collections;
 
 public class HUDSlot : MonoBehaviour {
@@ -105,3 +105,4 @@ public class HUDSlot : MonoBehaviour {
 		renderer.material = unbuilt;
 	}
 }
+ */

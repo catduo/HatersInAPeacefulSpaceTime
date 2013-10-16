@@ -170,6 +170,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	        if (GUI.Button(new Rect(350, 200, 150, 50), "Single Player")){
 				is_local = true;
 				is_menu = false;
+				GameObject.Find ("PlayerShip").GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
 			}
 	        if (GUI.Button(new Rect(350, 300, 150, 50), "Instructions")){
 				is_instructions = true;

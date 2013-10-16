@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public enum BuildingType{
+public enum ComponentType{
 	Empty = 0,
 	Factory = 5,
 	Repair = 30,
@@ -10,36 +10,31 @@ public enum BuildingType{
 	Laser = 10
 }
 
-public struct BuildingStatus{
-	public float cooldownTime, lastFiredTime;
-	public int level, upgradeCost, damage;
-	public bool ready;
-}
-
-public class Building : MonoBehaviour {
+public class ComponentScript : MonoBehaviour {
 	
 	private Transform hudSlot;
 	private Transform hudHighlight;
-	private TextMesh buildingLevelTextMesh;
+	private TextMesh componentLevelTextMesh;
 	
 	public Material cannonMaterial;
 	public Material rocketMaterial;
 	public Material laserMaterial;
-	public Material factoryMaterial;
+	public Material shieldMaterial;
+	public Material ramMaterial;
 	public Material repairMaterial;
-	private Transform buildingArt;
+	private Transform componentArt;
 	
 	public GameObject cannon1;
 	public GameObject rocket1;
 	public GameObject laser1;
 	private Vector3 fireDirection;
-	private BuildingType thisType = BuildingType.Empty;
-	private float buildingLevel = 0;
-	public int cost ;
+	private ComponentType thisType = ComponentType.Empty;
+	private float componentLevel = 0;
+	public int cost;
 	
-	private float buildingCooldown = 0.1F;
-	public float lastBuildingUse;
-	public bool is_buildingReady = true;
+	private float componentCooldown = 0.1F;
+	public float lastComponentUse;
+	public bool is_componentReady = true;
 	private Transform progressBar;
 	
 	private bool is_actionDelayed = false;
@@ -49,24 +44,29 @@ public class Building : MonoBehaviour {
 	public AudioClip cannonFire;
 	public AudioClip laserFire;
 	public AudioClip rocketFire;
-	public AudioClip factoryActivate;
+	public AudioClip shieldActivate;
+	public AudioClip ramHit;
 	public AudioClip repairActivate;
 	public AudioClip construction;
 	public AudioClip notEnoughFunds;
 	private AudioSource audioSource;
 	
+	public void Action(){
+		Debug.Log ("Action for " + name);
+	}
+	/*
 	// Use this for initialization
 	void Start () {
 		audioSource = GetComponent<AudioSource>();
 		hudSlot = transform.parent.GetComponent<PlanetaryControls>().statusArea.FindChild("Locations").FindChild(name);
 		hudHighlight = hudSlot.FindChild("Highlight");
-		buildingLevelTextMesh = hudSlot.FindChild("Level").GetComponent<TextMesh>();
-		buildingArt = transform.FindChild("Art");
-		buildingArt.renderer.enabled = false;
+		componentLevelTextMesh = hudSlot.FindChild("Level").GetComponent<TextMesh>();
+		componentArt = transform.FindChild("Art");
+		componentArt.renderer.enabled = false;
 		progressBar = hudSlot.FindChild("ProgressBar");
 		progressBar.GetComponent<ProgressBar>().measure = 1;
 		progressBar.GetComponent<ProgressBar>().measureCap = 1;
-		lastBuildingUse = Time.time - buildingCooldown;
+		lastComponentUse = Time.time - componentCooldown;
 		if(name == "Up"){
 			Selected();
 		}
@@ -75,8 +75,8 @@ public class Building : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(!is_buildingReady){
-			BuildingReady();
+		if(!is_componentReady){
+			ComponentReady();
 		}
 		if(is_actionDelayed && (delayTime + delayDuration < Time.time)){
 			Action ();
@@ -84,13 +84,13 @@ public class Building : MonoBehaviour {
 		}
 	}
 	
-	public void BuildingReady () {
-		if(buildingCooldown + lastBuildingUse < Time.time){
-			is_buildingReady = true;
-			progressBar.GetComponent<ProgressBar>().measure = buildingCooldown;
+	public void ComponentReady () {
+		if(componentCooldown + lastComponentUse < Time.time){
+			is_componentReady = true;
+			progressBar.GetComponent<ProgressBar>().measure = componentCooldown;
 		}
 		else{
-			progressBar.GetComponent<ProgressBar>().measure = Time.time - lastBuildingUse;
+			progressBar.GetComponent<ProgressBar>().measure = Time.time - lastComponentUse;
 		}
 	}
 	
@@ -109,20 +109,20 @@ public class Building : MonoBehaviour {
 	}
 	
 	public void Scroll(int direction){
-		if(thisType == BuildingType.Empty){
+		if(thisType == ComponentType.Empty){
 			hudSlot.GetComponent<HUDSlot>().ScrollOnSelect(direction);
 		}
 		cost = hudSlot.GetComponent<HUDSlot>().cost;
 	}
 	
 	public void Upgrade() {
-		if(transform.parent.GetComponent<PlanetaryControls>().playerMoney >= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, buildingLevel))){
+		if(transform.parent.GetComponent<PlanetaryControls>().playerMoney >= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel))){
 			Construct(hudSlot.GetComponent<HUDSlot>().selectedType);
-			transform.parent.GetComponent<PlanetaryControls>().playerMoney -= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, buildingLevel));
+			transform.parent.GetComponent<PlanetaryControls>().playerMoney -= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
 			transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
-			buildingLevel ++;
-			buildingLevelTextMesh.text = "Lvl" + buildingLevel.ToString();
-			cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, buildingLevel));
+			componentLevel ++;
+			comoponentLevelTextMesh.text = "Lvl" + componentLevel.ToString();
+			cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
 			hudSlot.GetComponent<HUDSlot>().title.text = "Upgrade " + name + " (&" + cost.ToString() + ")";
 			audioSource.clip = construction;
 			audioSource.Play ();
@@ -141,13 +141,13 @@ public class Building : MonoBehaviour {
 	}
 	
 	public void Construct() {
-		if(thisType == BuildingType.Empty){
+		if(thisType == ComponentType.Empty){
 			if(transform.parent.GetComponent<PlanetaryControls>().playerMoney >= (int) hudSlot.GetComponent<HUDSlot>().selectedType){
 				Construct(hudSlot.GetComponent<HUDSlot>().selectedType);
-				buildingLevel ++;
-				cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, buildingLevel));
+				componentLevel ++;
+				cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
 				hudSlot.GetComponent<HUDSlot>().title.text = "Upgrade " + name + " (&" + cost.ToString() + ")";
-				buildingLevelTextMesh.text = "Lvl" + buildingLevel.ToString();
+				componentLevelTextMesh.text = "Lvl" + componentLevel.ToString();
 				hudSlot.GetComponent<HUDSlot>().Construct();
 				transform.parent.GetComponent<PlanetaryControls>().playerMoney -= (int) hudSlot.GetComponent<HUDSlot>().selectedType;
 				transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
@@ -164,35 +164,35 @@ public class Building : MonoBehaviour {
 	}	
 
 	
-	public void Construct(BuildingType type){
+	public void Construct(ComponentType type){
 		thisType = type;
-		if(type == BuildingType.Empty){
-			buildingLevel = 0;
-			buildingLevelTextMesh.text = "";
+		if(type == ComponentType.Empty){
+			componentLevel = 0;
+			componentLevelTextMesh.text = "";
 		}
 		switch(type){
-		case BuildingType.Cannon:
-			buildingArt.renderer.enabled = true;
-			buildingArt.renderer.material = cannonMaterial;
+		case ComponentType.Cannon:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = cannonMaterial;
 			break;
-		case BuildingType.Rocket:
-			buildingArt.renderer.enabled = true;
-			buildingArt.renderer.material = rocketMaterial;
+		case ComponentType.Rocket:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = rocketMaterial;
 			break;
-		case BuildingType.Laser:
-			buildingArt.renderer.enabled = true;
-			buildingArt.renderer.material = laserMaterial;
+		case ComponentType.Laser:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = laserMaterial;
 			break;
-		case BuildingType.Factory:
-			buildingArt.renderer.enabled = true;
-			buildingArt.renderer.material = factoryMaterial;
+		case ComponentType.Factory:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = factoryMaterial;
 			break;
-		case BuildingType.Repair:
-			buildingArt.renderer.enabled = true;
-			buildingArt.renderer.material = repairMaterial;
+		case ComponentType.Repair:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = repairMaterial;
 			break;
 		default:
-			buildingArt.renderer.enabled = false;
+			componentArt.renderer.enabled = false;
 			break;
 		}
 	}
@@ -206,84 +206,84 @@ public class Building : MonoBehaviour {
 	}
 	
 	public void Action() { 
-		if(is_buildingReady){
+		if(is_componentReady){
 			progressBar.GetComponent<ProgressBar>().measure = 1;
 			progressBar.GetComponent<ProgressBar>().measureCap = 1;		
-			is_buildingReady = false;
-			lastBuildingUse = Time.time;
+			is_componentReady = false;
+			lastComponentUse = Time.time;
 			switch(thisType){
-			case BuildingType.Cannon:
+			case ComponentType.Cannon:
 				FireCannon();
 				break;
 				
-			case BuildingType.Factory:
+			case ComponentType.Factory:
 				CollectFactory();
 				break;
 				
-			case BuildingType.Laser:
+			case ComponentType.Laser:
 				FireLaser();
 				break;
 				
-			case BuildingType.Repair:
+			case ComponentType.Repair:
 				RepairPlanet();
 				break;
 				
-			case BuildingType.Rocket:
+			case ComponentType.Rocket:
 				FireRocket();
 				break;
 				
 			default:
 				break;
 			}
-			progressBar.GetComponent<ProgressBar>().measureCap = buildingCooldown;	
+			progressBar.GetComponent<ProgressBar>().measureCap = componentCooldown;	
 		}
 	}
 		
 	void FireCannon () {
-		buildingCooldown = 0.3F;	
-		GameObject newProjectile = (GameObject) Instantiate(cannon1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.1F * buildingLevel)), Quaternion.LookRotation(transform.up));
-		newProjectile.transform.localScale *= (1 + (0.5F * (buildingLevel - 1)));
+		componentCooldown = 0.3F;	
+		GameObject newProjectile = (GameObject) Instantiate(cannon1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.1F * componentLevel)), Quaternion.LookRotation(transform.up));
+		newProjectile.transform.localScale *= (1 + (0.5F * (componentLevel - 1)));
 		audioSource.clip = cannonFire;
 		audioSource.Play ();
 	}
 	
 	void FireRocket () {
-		buildingCooldown = 2;
-		GameObject newProjectile = (GameObject) Instantiate(rocket1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.1F * buildingLevel)), Quaternion.LookRotation(transform.up));
-		newProjectile.transform.localScale *= (1 + (0.5F * (buildingLevel - 1)));
+		componentCooldown = 2;
+		GameObject newProjectile = (GameObject) Instantiate(rocket1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.1F * componentLevel)), Quaternion.LookRotation(transform.up));
+		newProjectile.transform.localScale *= (1 + (0.5F * (componentLevel - 1)));
 		audioSource.clip = rocketFire;
 		audioSource.Play ();
 	}
 	
 	void CollectFactory () {
-		buildingCooldown = 5;
-		transform.parent.GetComponent<PlanetaryControls>().playerMoney += 5 * (int) buildingLevel;
+		componentCooldown = 5;
+		transform.parent.GetComponent<PlanetaryControls>().playerMoney += 5 * (int) componentLevel;
 		transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
 		audioSource.clip = factoryActivate;
 		audioSource.Play ();
 	}
 	
 	void RepairPlanet () {
-		if(transform.parent.GetComponent<PlanetaryControls>().planetaryHealth < (100 - (5 + 2 * buildingLevel))){
-			transform.parent.GetComponent<PlanetaryControls>().planetaryHealth += (5 + 2 * buildingLevel);
+		if(transform.parent.GetComponent<PlanetaryControls>().planetaryHealth < (100 - (5 + 2 * componentLevel))){
+			transform.parent.GetComponent<PlanetaryControls>().planetaryHealth += (5 + 2 * componentLevel);
 		}
 		else if(transform.parent.GetComponent<PlanetaryControls>().planetaryHealth < 100){
 			transform.parent.GetComponent<PlanetaryControls>().planetaryHealth = 100;
 		}
-		buildingCooldown = 10;
+		componentCooldown = 10;
 		audioSource.clip = repairActivate;
 		audioSource.Play ();
 	}
 	
 	void FireLaser () {
-		buildingCooldown = 0.1F;
-		GameObject newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * buildingLevel)), Quaternion.LookRotation(transform.up));
-		newProjectile.transform.localScale *= (1 + (0.5F * (buildingLevel - 1)));
+		componentCooldown = 0.1F;
+		GameObject newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * componentLevel)), Quaternion.LookRotation(transform.up));
+		newProjectile.transform.localScale *= (1 + (0.5F * (componentLevel - 1)));
 		newProjectile.transform.RotateAround(transform.parent.position, new Vector3(0,0,1), 45);
-		newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * buildingLevel)), Quaternion.LookRotation(transform.up));
-		newProjectile.transform.localScale *= (1 + (0.5F * (buildingLevel - 1)));
-		newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * buildingLevel)), Quaternion.LookRotation(transform.up));
-		newProjectile.transform.localScale *= (1 + (0.5F * (buildingLevel - 1)));
+		newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * componentLevel)), Quaternion.LookRotation(transform.up));
+		newProjectile.transform.localScale *= (1 + (0.5F * (componentLevel - 1)));
+		newProjectile = (GameObject) Instantiate(laser1, transform.position + (transform.position - transform.parent.position) * 1.3F * (1 + (0.25F * componentLevel)), Quaternion.LookRotation(transform.up));
+		newProjectile.transform.localScale *= (1 + (0.5F * (componentLevel - 1)));
 		newProjectile.transform.RotateAround(transform.parent.position, new Vector3(0,0,1), -45);
 		audioSource.clip = laserFire;
 		audioSource.Play ();
@@ -292,7 +292,8 @@ public class Building : MonoBehaviour {
 	public void Reset () {
 		progressBar.GetComponent<ProgressBar>().measure = 1;
 		progressBar.GetComponent<ProgressBar>().measureCap = 1;
-		Construct(BuildingType.Empty);
+		Construct(ComponentType.Empty);
 		hudSlot.GetComponent<HUDSlot>().Reset();
 	}
+*/
 }
