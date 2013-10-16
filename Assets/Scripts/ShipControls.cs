@@ -32,8 +32,6 @@ public class ShipControls: MonoBehaviour {
 	private int engineLevel;
 	private float maxSpeed = 1.5F;
 	private float acceleration = 5;
-	private float thisHorizontal;
-	private float thisVertical;
 	
 	public float planetaryHealth = 100;
 	public float maxHealth = 100;
@@ -83,7 +81,7 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void FixedUpdate(){
-		Engines();
+		Engines(DPad.horizontal, DPad.vertical, transform.eulerAngles);
 	}
 	
 	// Update is called once per frame
@@ -101,7 +99,7 @@ public class ShipControls: MonoBehaviour {
 		}
 	}
 	
-	void Engines(){
+	[RPC] void Engines(float thisHorizontal, float thisVertical, Vector3 eulerAngles){
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
 				thisVertical = DPad.vertical;
@@ -111,6 +109,7 @@ public class ShipControls: MonoBehaviour {
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 0.4F), 0.4F));
 				transform.Rotate(0,0, - thisHorizontal);
+				networkView.RPC("Engines", RPCMode.Server, thisHorizontal, thisVertical, transform.eulerAngles);
 			}
 			else{
 				//animate and move the ship
@@ -129,7 +128,7 @@ public class ShipControls: MonoBehaviour {
 				else{
 					rigidbody.AddRelativeForce(0,thisVertical * acceleration / 2,0);
 				}
-				transform.Rotate(0,0, - thisHorizontal);
+				transform.eulerAngles = eulerAngles;
 			}
 		}
 	}
@@ -273,27 +272,4 @@ public class ShipControls: MonoBehaviour {
 			break;
 		}
 	}
-	
-    void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
-        Vector3 eulerAngles = Vector3.zero;
-		float vertical = 0;
-		float horizontal = 0;
-        if (stream.isWriting) {
-			vertical = thisVertical;
-			horizontal = thisHorizontal;
-            eulerAngles = transform.eulerAngles;
-			
-            stream.Serialize(ref vertical);
-            stream.Serialize(ref horizontal);
-            stream.Serialize(ref eulerAngles);
-        } else {
-            stream.Serialize(ref vertical);
-            stream.Serialize(ref horizontal);
-            stream.Serialize(ref eulerAngles);
-			Debug.Log (vertical);
-			thisVertical = vertical;
-			thisHorizontal = horizontal;
-            transform.eulerAngles = eulerAngles;
-        }
-    }
 }
