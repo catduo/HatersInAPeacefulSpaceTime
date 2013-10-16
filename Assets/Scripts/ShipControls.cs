@@ -98,32 +98,34 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void Engines(){
+		thisVertical = DPad.vertical;
+		thisHorizontal = DPad.horizontal;
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
 				//show animations, but don't move anything
-				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
-				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.horizontal * 2 - DPad.vertical) * 0.2F), 0.2F));
-				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
-				transform.Rotate(0,0, - DPad.horizontal);
+				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 0.2F), 0.2F));
+				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
+				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 0.4F), 0.4F));
+				transform.Rotate(0,0, - thisHorizontal);
 			}
 			else{
 				//animate and move the ship
-				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
-				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.horizontal * 2 - DPad.vertical) * 0.2F), 0.2F));
-				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
+				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 0.2F), 0.2F));
+				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
+				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 0.4F), 0.4F));
 				if(DPad.vertical > 0){
 					if(rigidbody.velocity.magnitude < maxSpeed){
-						rigidbody.AddRelativeForce(0,DPad.vertical * acceleration,0);
+						rigidbody.AddRelativeForce(0,thisVertical * acceleration,0);
 					}
 					else{
-						rigidbody.AddRelativeForce(0,1 * acceleration,0);
+						rigidbody.AddRelativeForce(0,thisVertical * acceleration,0);
 						rigidbody.velocity *= maxSpeed / rigidbody.velocity.magnitude;
 					}
 				}
 				else{
-					rigidbody.AddRelativeForce(0,DPad.vertical * acceleration / 2,0);
+					rigidbody.AddRelativeForce(0,thisVertical * acceleration / 2,0);
 				}
-				transform.Rotate(0,0, - DPad.horizontal);
+				transform.Rotate(0,0, - thisHorizontal);
 			}
 		}
 	}
@@ -273,8 +275,8 @@ public class ShipControls: MonoBehaviour {
 		float vertical = 0;
 		float horizontal = 0;
         if (stream.isWriting) {
-			vertical = DPad.vertical;
-			horizontal = DPad.horizontal;
+			vertical = thisVertical;
+			horizontal = thisHorizontal;
             eulerAngles = transform.eulerAngles;
 			
             stream.Serialize(ref vertical);
@@ -285,8 +287,8 @@ public class ShipControls: MonoBehaviour {
             stream.Serialize(ref horizontal);
             stream.Serialize(ref eulerAngles);
 			
-			vertical = DPad.vertical;
-			horizontal = DPad.horizontal;
+			vertical = thisVertical;
+			horizontal = thisHorizontal;
             eulerAngles = transform.eulerAngles;
         }
     }
