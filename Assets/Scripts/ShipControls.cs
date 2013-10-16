@@ -108,7 +108,7 @@ public class ShipControls: MonoBehaviour {
 			}
 			else{
 				//animate and move the ship
-				rightEngine.GetComponent<Engine>().Power(Mathf.Max( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
+				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.horizontal * 2 - DPad.vertical) * 0.2F), 0.2F));
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
 				if(DPad.vertical > 0){
@@ -116,7 +116,7 @@ public class ShipControls: MonoBehaviour {
 						rigidbody.AddRelativeForce(0,DPad.vertical * acceleration,0);
 					}
 					else{
-						rigidbody.AddRelativeForce(0,DPad.vertical * acceleration,0);
+						rigidbody.AddRelativeForce(0,1 * acceleration,0);
 						rigidbody.velocity *= maxSpeed / rigidbody.velocity.magnitude;
 					}
 				}
