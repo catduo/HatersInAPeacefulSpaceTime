@@ -32,6 +32,8 @@ public class ShipControls: MonoBehaviour {
 	private int engineLevel;
 	private float maxSpeed = 1.5F;
 	private float acceleration = 5;
+	private float thisHorizontal;
+	private float thisVertical;
 	
 	public float planetaryHealth = 100;
 	public float maxHealth = 100;
@@ -106,7 +108,7 @@ public class ShipControls: MonoBehaviour {
 			}
 			else{
 				//animate and move the ship
-				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
+				rightEngine.GetComponent<Engine>().Power(Mathf.Max( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.horizontal * 2 - DPad.vertical) * 0.2F), 0.2F));
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
 				if(DPad.vertical > 0){
