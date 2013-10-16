@@ -67,16 +67,19 @@ public class ShipControls: MonoBehaviour {
 		if(networkView.isMine){
 			is_client = true;
 		}
+		networkView.group = 1;
 		up = transform.FindChild("Up");
 		left = transform.FindChild("Left");
 		right = transform.FindChild("Right");
 		mainEngine = transform.FindChild("MainEngine");
 		rightEngine = transform.FindChild("RightEngine");
 		leftEngine = transform.FindChild("LeftEngine");
-		statusArea = GameObject.Find ("StatusArea").transform;
-		healthText = statusArea.FindChild("HealthText").GetComponent<TextMesh>();
-		moneyText = statusArea.FindChild("Money").GetComponent<TextMesh>();
-		lastMoneyTime = Time.time - moneyRate;
+		if(is_client){
+			statusArea = GameObject.Find ("StatusArea").transform;
+			healthText = statusArea.FindChild("HealthText").GetComponent<TextMesh>();
+			moneyText = statusArea.FindChild("Money").GetComponent<TextMesh>();
+			lastMoneyTime = Time.time - moneyRate;
+		}
 	}
 	
 	void FixedUpdate(){
@@ -90,18 +93,19 @@ public class ShipControls: MonoBehaviour {
 	
 	void Income(){
 		if(thisPlayerState == PlayerState.Fighting){
-			if(is_client){
+			if(is_client && lastMoneyTime + moneyRate < Time.time){
 				playerMoney++;
 				moneyText.text = "&" + playerMoney.ToString();
+				lastMoneyTime = Time.time;
 			}
 		}
 	}
 	
 	void Engines(){
-		thisVertical = DPad.vertical;
-		thisHorizontal = DPad.horizontal;
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
+				thisVertical = DPad.vertical;
+				thisHorizontal = DPad.horizontal;
 				//show animations, but don't move anything
 				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 0.2F), 0.2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
@@ -286,10 +290,10 @@ public class ShipControls: MonoBehaviour {
             stream.Serialize(ref vertical);
             stream.Serialize(ref horizontal);
             stream.Serialize(ref eulerAngles);
-			
-			vertical = thisVertical;
-			horizontal = thisHorizontal;
-            eulerAngles = transform.eulerAngles;
+			Debug.Log (vertical);
+			thisVertical = vertical;
+			thisHorizontal = horizontal;
+            transform.eulerAngles = eulerAngles;
         }
     }
 }

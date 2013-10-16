@@ -26,7 +26,6 @@ public class NetworkAndMenu : MonoBehaviour {
 	
 	void OnServerInitialized(){
 	    Debug.Log("Server Initializied");
-		Network.SetSendingEnabled(0, false);
 	}
 	
 	public void Disconnect () {
@@ -36,6 +35,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		Application.targetFrameRate = 24;
 		lastTry = Time.time;
 		if(Application.loadedLevelName == "Game"){
 			is_hosting = true;
