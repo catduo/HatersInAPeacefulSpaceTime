@@ -78,13 +78,12 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void FixedUpdate(){
-		
+		Engines();
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		Income ();
-		Engines();
 	}
 	
 	void Income(){
@@ -103,7 +102,7 @@ public class ShipControls: MonoBehaviour {
 				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - DPad.vertical - DPad.horizontal * 2) * 0.2F), 0.2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.horizontal * 2 - DPad.vertical) * 0.2F), 0.2F));
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
-				transform.Rotate(0,0, - DPad.horizontal * 10);
+				transform.Rotate(0,0, - DPad.horizontal);
 			}
 			else{
 				//animate and move the ship
@@ -112,17 +111,17 @@ public class ShipControls: MonoBehaviour {
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((DPad.vertical) * 0.4F), 0.4F));
 				if(DPad.vertical > 0){
 					if(rigidbody.velocity.magnitude < maxSpeed){
-						rigidbody.AddRelativeForce(0,DPad.vertical * 5,0);
+						rigidbody.AddRelativeForce(0,DPad.vertical * acceleration,0);
 					}
 					else{
-						rigidbody.AddRelativeForce(0,DPad.vertical * 5,0);
+						rigidbody.AddRelativeForce(0,DPad.vertical * acceleration,0);
 						rigidbody.velocity *= maxSpeed / rigidbody.velocity.magnitude;
 					}
 				}
 				else{
-					rigidbody.AddRelativeForce(0,DPad.vertical,0);
+					rigidbody.AddRelativeForce(0,DPad.vertical * acceleration / 2,0);
 				}
-				transform.Rotate(0,0, - DPad.horizontal * 10);
+				transform.Rotate(0,0, - DPad.horizontal);
 			}
 		}
 	}
@@ -234,6 +233,36 @@ public class ShipControls: MonoBehaviour {
 			else{
 				networkView.RPC("GetXP", networkView.owner, xpAmount);
 			}
+		}
+	}
+	
+	[RPC] public void SetState(string stateString){
+		if(is_client){
+			networkView.RPC("SetState", RPCMode.Server, stateString);
+		}
+		switch(stateString){
+		case "roundEnded":
+			thisPlayerState = PlayerState.RoundEnded;
+			break;
+		case "building":
+			thisPlayerState = PlayerState.Building;
+			break;
+		case "fighting":
+			thisPlayerState = PlayerState.Fighting;
+			break;
+		case "launching":
+			thisPlayerState = PlayerState.Launching;
+			break;
+		case "menu":
+			thisPlayerState = PlayerState.Menu;
+			break;
+		case "recovering":
+			thisPlayerState = PlayerState.Recovering;
+			break;
+		default:
+			Debug.Log ("error in setting state in the ship controls script");
+			thisPlayerState = PlayerState.Fighting;
+			break;
 		}
 	}
 	

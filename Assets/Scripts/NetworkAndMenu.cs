@@ -82,7 +82,7 @@ public class NetworkAndMenu : MonoBehaviour {
 		is_menu = false;
 		is_connecting = false;
 		GameObject thisShip = (GameObject) Network.Instantiate(playerObject, Vector3.zero, Quaternion.identity, 0);
-		thisShip.GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
+		thisShip.GetComponent<ShipControls>().SetState("fighting");
 	}
 	
 	void OnPlayerDisconnected(NetworkPlayer player)
@@ -172,7 +172,7 @@ public class NetworkAndMenu : MonoBehaviour {
 				is_local = true;
 				is_menu = false;
 				GameObject thisShip = (GameObject) GameObject.Instantiate(playerObject, Vector3.zero, Quaternion.identity);
-				thisShip.GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
+				thisShip.GetComponent<ShipControls>().SetState("fighting");
 			}
 	        if (GUI.Button(new Rect(350, 300, 150, 50), "Instructions")){
 				is_instructions = true;
