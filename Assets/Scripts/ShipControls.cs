@@ -12,7 +12,7 @@ public enum PlayerState {
 
 public class ShipControls: MonoBehaviour {
 	
-	public PlayerState thisPlayerState = PlayerState.Menu;
+	public PlayerState thisPlayerState = PlayerState.Fighting;
 	
 	private Transform up;
 	private Transform left;
