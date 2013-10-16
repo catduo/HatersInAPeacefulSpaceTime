@@ -49,7 +49,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	void OnDisconnectedFromServer(NetworkDisconnection info){
 		is_menu = true;
 		is_online = false;
-		GameObject.Find ("MainCamera").GetComponent<FollowCharacter>().StopCharacterFollow();
+		//GameObject.Find ("MainCamera").GetComponent<FollowCharacter>().StopCharacterFollow();
 	}
 	
 	private HostData[] hostList = new HostData[] {};
@@ -81,7 +81,8 @@ public class NetworkAndMenu : MonoBehaviour {
 	    Debug.Log("Server Joined");
 		is_menu = false;
 		is_connecting = false;
-		Network.Instantiate(playerObject, Vector3.zero, Quaternion.identity, 0);
+		GameObject thisShip = (GameObject) Network.Instantiate(playerObject, Vector3.zero, Quaternion.identity, 0);
+		thisShip.GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
 	}
 	
 	void OnPlayerDisconnected(NetworkPlayer player)
@@ -170,7 +171,8 @@ public class NetworkAndMenu : MonoBehaviour {
 	        if (GUI.Button(new Rect(350, 200, 150, 50), "Single Player")){
 				is_local = true;
 				is_menu = false;
-				GameObject.Find ("PlayerShip").GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
+				GameObject thisShip = (GameObject) GameObject.Instantiate(playerObject, Vector3.zero, Quaternion.identity);
+				thisShip.GetComponent<ShipControls>().thisPlayerState = PlayerState.Fighting;
 			}
 	        if (GUI.Button(new Rect(350, 300, 150, 50), "Instructions")){
 				is_instructions = true;
