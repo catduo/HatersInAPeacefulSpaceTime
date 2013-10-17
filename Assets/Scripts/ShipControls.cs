@@ -213,25 +213,46 @@ public class ShipControls: MonoBehaviour {
 		healthLevel++;
 	}
 	
-	public void Spawn(){
+	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel){
 		thisPlayerState = PlayerState.Fighting;
 		if(is_client){
 			playerHealth = maxHealth;
 			//change ui and send message to launch, change state
 			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType.ToString(), rightLevel, rightType.ToString(), leftLevel, leftType.ToString(), engineLevel);
 		}
-	}
-	
-	[RPC] void Spawn(float newUpLevel, string newUpType, float newRightLevel, string newRightType, float newLeftLevel, string newLeftType, int newEngineLevel){
-		thisPlayerState = PlayerState.Fighting;
-		up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
-		right.GetComponent<ComponentScript>().SetComponent(newRightType, newRightLevel);
-		left.GetComponent<ComponentScript>().SetComponent(newLeftType, newLeftLevel);
-		engineLevel = 0;
-		for(int i = 0; i < newEngineLevel; i++){
-			acceleration *= engineMultiplier;
-			maxSpeed *= engineMultiplier;
-			engineLevel++;
+		else{
+			up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
+			right.GetComponent<ComponentScript>().SetComponent(newRightType, newRightLevel);
+			left.GetComponent<ComponentScript>().SetComponent(newLeftType, newLeftLevel);
+			engineLevel = 0;
+			for(int i = 0; i < newEngineLevel; i++){
+				acceleration *= engineMultiplier;
+				maxSpeed *= engineMultiplier;
+				engineLevel++;
+			}
+			for(int i = 0; i < transform.childCount; i++){
+				Transform thisChild = transform.GetChild(i);
+				if(thisChild.renderer != null){
+					thisChild.renderer.enabled = true;
+				}
+				if(thisChild.collider != null){
+					thisChild.collider.enabled = true;
+				}
+				for(int j = 0; j < thisChild.childCount; j++){
+					if(thisChild.GetChild(j).renderer != null){
+						thisChild.GetChild(j).renderer.enabled = true;
+					}
+					if(thisChild.GetChild(j).collider != null){
+						thisChild.GetChild(j).collider.enabled = true;
+					}
+				}
+			}
+			if(renderer != null){
+				renderer.enabled = true;
+			}
+			if(collider != null){
+				collider.enabled = true;
+			}
 		}
 	}
 	
@@ -268,15 +289,27 @@ public class ShipControls: MonoBehaviour {
 			thisPlayerState = PlayerState.Building;
 			for(int i = 0; i < transform.childCount; i++){
 				Transform thisChild = transform.GetChild(i);
-				thisChild.renderer.enabled = false;
-				thisChild.collider.enabled = false;
+				if(thisChild.renderer != null){
+					thisChild.renderer.enabled = false;
+				}
+				if(thisChild.collider != null){
+					thisChild.collider.enabled = false;
+				}
 				for(int j = 0; j < thisChild.childCount; j++){
-					thisChild.GetChild(j).renderer.enabled = false;
-					thisChild.GetChild(j).collider.enabled = false;
+					if(thisChild.GetChild(j).renderer != null){
+						thisChild.GetChild(j).renderer.enabled = false;
+					}
+					if(thisChild.GetChild(j).collider != null){
+						thisChild.GetChild(j).collider.enabled = false;
+					}
 				}
 			}
-			renderer.enabled = false;
-			collider.enabled = false;
+			if(renderer != null){
+				renderer.enabled = false;
+			}
+			if(collider != null){
+				collider.enabled = false;
+			}
 		}
 	}
 	

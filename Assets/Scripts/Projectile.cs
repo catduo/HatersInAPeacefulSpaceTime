@@ -50,7 +50,6 @@ public class Projectile : MonoBehaviour {
 				explosionTime = Time.time;
 				GetComponent<AudioSource>().Play();
 				collider.enabled = false;
-				transform.FindChild("plane").renderer.enabled = false;
 			}
 			else{
 				Destroy(gameObject);

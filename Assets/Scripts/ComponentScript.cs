@@ -157,6 +157,35 @@ public class ComponentScript : MonoBehaviour {
 			thisType = ComponentType.Empty;
 			break;
 		}
+		switch(thisType){
+		case ComponentType.Cannon:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = cannonMaterial;
+			break;
+		case ComponentType.Rocket:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = rocketMaterial;
+			break;
+		case ComponentType.Laser:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = laserMaterial;
+			break;
+		case ComponentType.Ram:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = ramMaterial;
+			break;
+		case ComponentType.Shield:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = shieldMaterial;
+			break;
+		case ComponentType.Repair:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = repairMaterial;
+			break;
+		default:
+			componentArt.renderer.enabled = false;
+			break;
+		}
 	}
 	
 	public void Construct(ComponentType type){

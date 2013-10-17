@@ -100,6 +100,7 @@ public class NetworkAndMenu : MonoBehaviour {
 		Destroy(playerObject);
 		playerObject = (GameObject) Network.Instantiate(shipObject, Vector3.zero, Quaternion.identity, 0);
 		playerObject.GetComponent<ShipControls>().SetState("fighting");
+		is_controller = true;
 	}
 	
 	void OnPlayerDisconnected(NetworkPlayer player)
@@ -216,7 +217,7 @@ public class NetworkAndMenu : MonoBehaviour {
 			switch(playerObject.GetComponent<ShipControls>().thisPlayerState){
 			case PlayerState.Building:
 			    if (GUI.Button(WorldRect(new Rect(-8,10,5,2)), "Fight")){
-					playerObject.GetComponent<ShipControls>().Spawn();
+					playerObject.GetComponent<ShipControls>().Spawn(0, "", 0, "", 0, "", 0);
 				}
 			    if (GUI.Button(WorldRect(new Rect(-13,8,2,2)), cannonTexture)){
 					selectedType = ComponentType.Cannon;
