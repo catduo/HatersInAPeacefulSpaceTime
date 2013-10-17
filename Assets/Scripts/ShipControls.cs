@@ -80,6 +80,15 @@ public class ShipControls: MonoBehaviour {
 			transform.localScale = new Vector3(5,5,0);
 			lastMoneyTime = Time.time - moneyRate;
 		}
+		upType = "Empty";
+		rightType = "Empty";
+		leftType = "Empty";
+		upLevel = 0;
+		rightLevel = 0;
+		leftLevel = 0;
+		engineLevel = 0;
+		healthLevel = 0;
+		moneyLevel = 0;
 	}
 	
 	void FixedUpdate(){
@@ -218,7 +227,7 @@ public class ShipControls: MonoBehaviour {
 		if(is_client){
 			playerHealth = maxHealth;
 			//change ui and send message to launch, change state
-			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType.ToString(), rightLevel, rightType.ToString(), leftLevel, leftType.ToString(), engineLevel);
+			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel);
 		}
 		else{
 			up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
@@ -372,10 +381,16 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void OnTriggerExit(Collider other){
-		if(other.name == "HBounds"){
+		if(other.name == "RHBounds" && transform.position.x > 0){
 			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
 		}
-		else if(other.name == "VBounds"){
+		if(other.name == "LHBounds" && transform.position.x < 0){
+			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
+		}
+		else if(other.name == "TVBounds" && transform.position.y > 0){
+			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
+		}
+		else if(other.name == "BVBounds" && transform.position.y < 0){
 			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
 	}
