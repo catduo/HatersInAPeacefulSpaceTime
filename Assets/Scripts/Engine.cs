@@ -5,10 +5,12 @@ public class Engine : MonoBehaviour {
 	
 	private ParticleSystem particleSystem;
 	private bool is_burning = false;
+	private float size;
 	
 	// Use this for initialization
 	void Start () {
 		particleSystem = GetComponentInChildren<ParticleSystem>();
+		size = particleSystem.startSize;
 	}
 	
 	// Update is called once per frame
@@ -25,7 +27,8 @@ public class Engine : MonoBehaviour {
 	public void Power(float power){
 		if(power > 0){
 			is_burning = true;
-			particleSystem.startLifetime = power;
+			particleSystem.startSpeed = power * 5;
+			particleSystem.startSize = size * power * 4;
 		}
 		else{
 			is_burning = false;

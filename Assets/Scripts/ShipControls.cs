@@ -14,47 +14,50 @@ public class ShipControls: MonoBehaviour {
 	
 	public PlayerState thisPlayerState = PlayerState.Fighting;
 	
-	private Transform up;
-	private Transform left;
-	private Transform right;
+	public Transform up;
+	public Transform left;
+	public Transform right;
 	private Transform mainEngine;
 	private Transform rightEngine;
 	private Transform leftEngine;
+	
+	public float healthMultiplier = 1.2F;
+	public float engineMultiplier = 1.2F;
+	public float moneyMultiplier = 1.5F;
 	
 	private Transform statusArea;
 	
 	private string upType;
 	private string rightType;
 	private string leftType;
-	private int upLevel;
-	private int rightLevel;
-	private int leftLevel;
-	private int engineLevel;
+	public int upLevel = 0;
+	public int rightLevel = 0;
+	public int leftLevel = 0;
+	public int engineLevel = 0;
+	public int healthLevel = 0;
+	public int moneyLevel = 0;
 	private float maxSpeed = 1.5F;
 	private float acceleration = 5;
 	
-	public float planetaryHealth = 100;
+	public float playerHealth = 100;
 	public float maxHealth = 100;
-	private TextMesh healthText;
 	
-	public int playerMoney;
-	private TextMesh moneyText;
-	private float moneyRate = 1;
+	public int playerMoney = 100;
+	public float moneyRate = 1;
 	private float lastMoneyTime;
 	
 	public int playerXP;
-	private TextMesh xpText;
 	
 	private Vector2 engineFiring;
 	private bool is_client = false;
 	
 	// Use this for initialization
 	void Start () {
-		if(PlayerPrefs.GetInt("PlayerMoney") != null){
+		if(PlayerPrefs.GetInt("PlayerMoney") > 0){
 			playerMoney = PlayerPrefs.GetInt("PlayerMoney");
 		}
 		else{
-			playerMoney = 0;
+			playerMoney += 30;
 		}
 		if(PlayerPrefs.GetInt("PlayerXP") != null){
 			playerXP = PlayerPrefs.GetInt("PlayerXP");
@@ -62,7 +65,7 @@ public class ShipControls: MonoBehaviour {
 		else{
 			playerXP = 0;
 		}
-		if(networkView.isMine){
+		if(networkView.isMine || NetworkAndMenu.is_local){
 			is_client = true;
 		}
 		networkView.group = 1;
@@ -73,43 +76,45 @@ public class ShipControls: MonoBehaviour {
 		rightEngine = transform.FindChild("RightEngine");
 		leftEngine = transform.FindChild("LeftEngine");
 		if(is_client){
-			statusArea = GameObject.Find ("StatusArea").transform;
-			healthText = statusArea.FindChild("HealthText").GetComponent<TextMesh>();
-			moneyText = statusArea.FindChild("Money").GetComponent<TextMesh>();
+			transform.position = new Vector3(5.5F, -2, 0);
+			transform.localScale = new Vector3(5,5,0);
 			lastMoneyTime = Time.time - moneyRate;
 		}
 	}
 	
 	void FixedUpdate(){
-		Engines(DPad.horizontal, DPad.vertical, transform.eulerAngles);
+		if(is_client){
+			Engines(DPad.horizontal, DPad.vertical);
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		Income ();
+		if(is_client){
+			Income ();
+		}
 	}
 	
 	void Income(){
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client && lastMoneyTime + moneyRate < Time.time){
 				playerMoney++;
-				moneyText.text = "&" + playerMoney.ToString();
 				lastMoneyTime = Time.time;
 			}
 		}
 	}
 	
-	[RPC] void Engines(float thisHorizontal, float thisVertical, Vector3 eulerAngles){
+	[RPC] void Engines(float thisHorizontal, float thisVertical){
 		if(thisPlayerState == PlayerState.Fighting){
+			rigidbody.angularVelocity = Vector3.zero;
 			if(is_client){
 				thisVertical = DPad.vertical;
 				thisHorizontal = DPad.horizontal;
 				//show animations, but don't move anything
-				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 0.2F), 0.2F));
-				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
-				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 0.4F), 0.4F));
-				transform.Rotate(0,0, - thisHorizontal);
-				networkView.RPC("Engines", RPCMode.Server, thisHorizontal, thisVertical, transform.eulerAngles);
+				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 2F), 2F));
+				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 2F), 2F));
+				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 4F), 4F));
+				networkView.RPC("Engines", RPCMode.Server, thisHorizontal, thisVertical);
 			}
 			else{
 				//animate and move the ship
@@ -128,16 +133,13 @@ public class ShipControls: MonoBehaviour {
 				else{
 					rigidbody.AddRelativeForce(0,thisVertical * acceleration / 2,0);
 				}
-				transform.eulerAngles = eulerAngles;
+				transform.Rotate(0,0, - thisHorizontal * acceleration / 10);
 			}
 		}
 	}
 	
-	[RPC] void Action(string position){
+	[RPC] public void Action(string position){
 		if(thisPlayerState == PlayerState.Fighting){
-			if(is_client){
-				networkView.RPC("Action", RPCMode.Server);
-			}
 			switch(position){
 			case "up":
 				up.GetComponent<ComponentScript>().Action();
@@ -152,18 +154,27 @@ public class ShipControls: MonoBehaviour {
 				Debug.Log ("error - bad position send to action script in ship controls");
 				break;
 			}
+			if(is_client){
+				networkView.RPC("Action", RPCMode.Server, position);
+			}
 		}
 		if(thisPlayerState == PlayerState.Building){
 			if(is_client){
 				switch(position){
 				case "up":
 					up.GetComponent<ComponentScript>().Action();
+					upLevel = Mathf.RoundToInt(up.GetComponent<ComponentScript>().componentLevel);
+					upType = up.GetComponent<ComponentScript>().thisType.ToString();
 					break;
 				case "right":
 					right.GetComponent<ComponentScript>().Action();
+					rightLevel = Mathf.RoundToInt(right.GetComponent<ComponentScript>().componentLevel);
+					rightType = right.GetComponent<ComponentScript>().thisType.ToString();
 					break;
 				case "left":
 					left.GetComponent<ComponentScript>().Action();
+					leftLevel = Mathf.RoundToInt(left.GetComponent<ComponentScript>().componentLevel);
+					leftType = left.GetComponent<ComponentScript>().thisType.ToString();
 					break;
 				case "engine":
 					EngineUpgrade();
@@ -183,27 +194,44 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void EngineUpgrade(){
-		
+		acceleration *= engineMultiplier;
+		maxSpeed *= engineMultiplier;
+		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, engineLevel) * 15);
+		engineLevel++;
 	}
 	
 	void FactoryUpgrade(){
+		moneyRate /= moneyMultiplier;
+		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, moneyLevel) * 15);
+		moneyLevel++;
 		
 	}
 	
 	void HealthUpgrade(){
-		
+		maxHealth *= healthMultiplier;
+		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, healthLevel) * 15);
+		healthLevel++;
 	}
 	
-	[RPC] void Spawn(){
-		if(thisPlayerState == PlayerState.Fighting){
-			if(is_client){
-				//change ui and send message to launch, change state
-				networkView.RPC("Spawn", RPCMode.Server);
-				thisPlayerState = PlayerState.Launching;
-			}
-			else{
-				//launch ship
-			}
+	public void Spawn(){
+		thisPlayerState = PlayerState.Fighting;
+		if(is_client){
+			playerHealth = maxHealth;
+			//change ui and send message to launch, change state
+			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType.ToString(), rightLevel, rightType.ToString(), leftLevel, leftType.ToString(), engineLevel);
+		}
+	}
+	
+	[RPC] void Spawn(float newUpLevel, string newUpType, float newRightLevel, string newRightType, float newLeftLevel, string newLeftType, int newEngineLevel){
+		thisPlayerState = PlayerState.Fighting;
+		up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
+		right.GetComponent<ComponentScript>().SetComponent(newRightType, newRightLevel);
+		left.GetComponent<ComponentScript>().SetComponent(newLeftType, newLeftLevel);
+		engineLevel = 0;
+		for(int i = 0; i < newEngineLevel; i++){
+			acceleration *= engineMultiplier;
+			maxSpeed *= engineMultiplier;
+			engineLevel++;
 		}
 	}
 	
@@ -211,11 +239,44 @@ public class ShipControls: MonoBehaviour {
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
 				//reduce health and update text, check if dead
+				playerHealth -= damage;
+				if (playerHealth <= 0){
+					Death();
+				}
 			}
 			else{
-				//reduce health and send damage to client, check if dead
+				//send damage to client
 				networkView.RPC("Damage", networkView.owner, damage);
 			}
+		}
+	}
+	
+	[RPC] public void Death(){
+		if(is_client){
+			thisPlayerState = PlayerState.Building;
+			up.GetComponent<ComponentScript>().Reset();
+			right.GetComponent<ComponentScript>().Reset();
+			left.GetComponent<ComponentScript>().Reset();
+			engineLevel = 0;
+			healthLevel = 0;
+			maxHealth = 100;
+			acceleration = 5;
+			maxSpeed = 1.5F;
+			networkView.RPC("Death", RPCMode.Server);
+		}
+		else{
+			thisPlayerState = PlayerState.Building;
+			for(int i = 0; i < transform.childCount; i++){
+				Transform thisChild = transform.GetChild(i);
+				thisChild.renderer.enabled = false;
+				thisChild.collider.enabled = false;
+				for(int j = 0; j < thisChild.childCount; j++){
+					thisChild.GetChild(j).renderer.enabled = false;
+					thisChild.GetChild(j).collider.enabled = false;
+				}
+			}
+			renderer.enabled = false;
+			collider.enabled = false;
 		}
 	}
 	
@@ -223,7 +284,6 @@ public class ShipControls: MonoBehaviour {
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
 				playerMoney+= moneyAmount;
-				moneyText.text = "&" + playerMoney.ToString();
 			}
 			else{
 				networkView.RPC("GetMoney", networkView.owner, moneyAmount);
@@ -235,7 +295,6 @@ public class ShipControls: MonoBehaviour {
 		if(thisPlayerState == PlayerState.Fighting){
 			if(is_client){
 				playerXP+= xpAmount;
-				xpText.text = playerXP.ToString() + "XP";
 			}
 			else{
 				networkView.RPC("GetXP", networkView.owner, xpAmount);
@@ -270,6 +329,29 @@ public class ShipControls: MonoBehaviour {
 			Debug.Log ("error in setting state in the ship controls script");
 			thisPlayerState = PlayerState.Fighting;
 			break;
+		}
+	}
+	
+	void OnCollisionEnter(Collision collision){
+		if(collision.transform.GetComponent<Projectile>() != null){
+			Damage(collision.transform.GetComponent<Projectile>().damage);
+		}
+	}
+	
+	void OnTriggerExit(Collider other){
+		if(other.name == "HBounds"){
+			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
+		}
+		else if(other.name == "VBounds"){
+			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
+		}
+	}
+	
+	void OnTriggerEnter(Collider other){
+		if(other.name == "Up" || other.name == "Right" || other.name == "Left"){
+			if (other.GetComponent<ComponentScript>().thisType == ComponentType.Ram){
+				Damage(other.GetComponent<ComponentScript>().componentLevel * 30);
+			}
 		}
 	}
 }

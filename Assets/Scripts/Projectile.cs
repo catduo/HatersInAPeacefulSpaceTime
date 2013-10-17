@@ -16,7 +16,7 @@ public class Projectile : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		transform.parent = GameObject.Find ("Projectiles").transform;
-		heavenlyBodyParent = GameObject.Find("HeavenlyBodies").transform;
+		heavenlyBodyParent = GameObject.Find("Planets").transform;
 		heavenlyBodies = new Transform[heavenlyBodyParent.childCount];
 		for(int i = 0; i < heavenlyBodyParent.childCount; i++){
 			heavenlyBodies[i] = heavenlyBodyParent.GetChild(i);
@@ -55,6 +55,15 @@ public class Projectile : MonoBehaviour {
 			else{
 				Destroy(gameObject);
 			}			
+		}
+	}
+	
+	void OnTriggerExit(Collider other){
+		if(other.name == "HBounds"){
+			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
+		}
+		else if(other.name == "VBounds"){
+			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
 	}
 }

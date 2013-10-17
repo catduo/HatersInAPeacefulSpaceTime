@@ -2,19 +2,19 @@ using UnityEngine;
 using System.Collections;
 
 public enum ComponentType{
-	Empty = 0,
-	Factory = 5,
-	Repair = 30,
-	Rocket = 25,
-	Cannon = 15,
-	Laser = 10
+	Empty,
+	Ram,
+	Shield,
+	Repair,
+	Rocket,
+	Cannon,
+	Laser
 }
 
 public class ComponentScript : MonoBehaviour {
 	
 	private Transform hudSlot;
 	private Transform hudHighlight;
-	private TextMesh componentLevelTextMesh;
 	
 	public Material cannonMaterial;
 	public Material rocketMaterial;
@@ -24,13 +24,21 @@ public class ComponentScript : MonoBehaviour {
 	public Material repairMaterial;
 	private Transform componentArt;
 	
+	public float cannonMultiplier = 1.5F;
+	public float rocketMultiplier = 2;
+	public float laserMultiplier = 1.2F;
+	public float shieldMultiplier = 1.2F;
+	public float ramMultiplier = 1.5F;
+	public float repairMultiplier = 2;
+	
 	public GameObject cannon1;
 	public GameObject rocket1;
 	public GameObject laser1;
 	private Vector3 fireDirection;
-	private ComponentType thisType = ComponentType.Empty;
-	private float componentLevel = 0;
+	public ComponentType thisType = ComponentType.Empty;
+	public float componentLevel = 0;
 	public int cost;
+	public string actionWord = "Construct in";
 	
 	private float componentCooldown = 0.1F;
 	public float lastComponentUse;
@@ -51,26 +59,16 @@ public class ComponentScript : MonoBehaviour {
 	public AudioClip notEnoughFunds;
 	private AudioSource audioSource;
 	
-	public void Action(){
-		Debug.Log ("Action for " + name);
-	}
-	/*
-	// Use this for initialization
 	void Start () {
 		audioSource = GetComponent<AudioSource>();
-		hudSlot = transform.parent.GetComponent<PlanetaryControls>().statusArea.FindChild("Locations").FindChild(name);
-		hudHighlight = hudSlot.FindChild("Highlight");
-		componentLevelTextMesh = hudSlot.FindChild("Level").GetComponent<TextMesh>();
 		componentArt = transform.FindChild("Art");
 		componentArt.renderer.enabled = false;
-		progressBar = hudSlot.FindChild("ProgressBar");
-		progressBar.GetComponent<ProgressBar>().measure = 1;
-		progressBar.GetComponent<ProgressBar>().measureCap = 1;
+		//progressBar = transform.FindChild("ProgressBar");
+		//progressBar.GetComponent<ProgressBar>().measure = 1;
+		//progressBar.GetComponent<ProgressBar>().measureCap = 1;
 		lastComponentUse = Time.time - componentCooldown;
-		if(name == "Up"){
-			Selected();
-		}
 		cost = 15;
+		actionWord = "Construct " + NetworkAndMenu.selectedType.ToString() + "\nin " + name + "\nfor &" + cost.ToString();
 	}
 	
 	// Update is called once per frame
@@ -78,54 +76,30 @@ public class ComponentScript : MonoBehaviour {
 		if(!is_componentReady){
 			ComponentReady();
 		}
-		if(is_actionDelayed && (delayTime + delayDuration < Time.time)){
-			Action ();
-			is_actionDelayed = false;
-		}
+	}
+	
+	public void ActionTextUpdate(){
+		actionWord = "Construct " + NetworkAndMenu.selectedType.ToString() + "\nin " + name + "\nfor &" + cost.ToString();
 	}
 	
 	public void ComponentReady () {
 		if(componentCooldown + lastComponentUse < Time.time){
 			is_componentReady = true;
-			progressBar.GetComponent<ProgressBar>().measure = componentCooldown;
+			//progressBar.GetComponent<ProgressBar>().measure = componentCooldown;
 		}
 		else{
-			progressBar.GetComponent<ProgressBar>().measure = Time.time - lastComponentUse;
+			//progressBar.GetComponent<ProgressBar>().measure = Time.time - lastComponentUse;
 		}
-	}
-	
-	public void Selected() {
-		transform.FindChild("Bracket").renderer.enabled = true;
-		transform.FindChild("Bracket").GetChild(0).renderer.enabled = true;
-		transform.FindChild("Bracket").GetChild(1).renderer.enabled = true;
-		hudHighlight.renderer.enabled = true;
-	}
-	
-	public void UnSelected() {
-		transform.FindChild("Bracket").renderer.enabled = false;
-		transform.FindChild("Bracket").GetChild(0).renderer.enabled = false;
-		transform.FindChild("Bracket").GetChild(1).renderer.enabled = false;
-		hudHighlight.renderer.enabled = false;
-	}
-	
-	public void Scroll(int direction){
-		if(thisType == ComponentType.Empty){
-			hudSlot.GetComponent<HUDSlot>().ScrollOnSelect(direction);
-		}
-		cost = hudSlot.GetComponent<HUDSlot>().cost;
 	}
 	
 	public void Upgrade() {
-		if(transform.parent.GetComponent<PlanetaryControls>().playerMoney >= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel))){
-			Construct(hudSlot.GetComponent<HUDSlot>().selectedType);
-			transform.parent.GetComponent<PlanetaryControls>().playerMoney -= Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
-			transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
+		if(transform.parent.GetComponent<ShipControls>().playerMoney >= cost){
+			transform.parent.GetComponent<ShipControls>().playerMoney -= cost;
 			componentLevel ++;
-			comoponentLevelTextMesh.text = "Lvl" + componentLevel.ToString();
-			cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
-			hudSlot.GetComponent<HUDSlot>().title.text = "Upgrade " + name + " (&" + cost.ToString() + ")";
+			cost = Mathf.RoundToInt(cost * 1.5F);
 			audioSource.clip = construction;
 			audioSource.Play ();
+			actionWord = "Upgrade " + thisType + "\nto Lvl" + (componentLevel + 1).ToString() + "\nfor &" + cost.ToString();
 		}
 		else{
 			NotEnoughFunds();
@@ -133,26 +107,21 @@ public class ComponentScript : MonoBehaviour {
 	}
 	
 	void NotEnoughFunds () {
-		if(!transform.parent.GetComponent<PlanetaryControls>().is_remote){
-			audioSource.clip = notEnoughFunds;
-			audioSource.Play ();
-			Debug.Log ("not enough funds");
-		}
+		audioSource.clip = notEnoughFunds;
+		audioSource.Play ();
+		Debug.Log ("not enough funds");
 	}
 	
 	public void Construct() {
 		if(thisType == ComponentType.Empty){
-			if(transform.parent.GetComponent<PlanetaryControls>().playerMoney >= (int) hudSlot.GetComponent<HUDSlot>().selectedType){
-				Construct(hudSlot.GetComponent<HUDSlot>().selectedType);
+			if(transform.parent.GetComponent<ShipControls>().playerMoney >= cost){
+				Construct(NetworkAndMenu.selectedType);
 				componentLevel ++;
-				cost = Mathf.RoundToInt((float) hudSlot.GetComponent<HUDSlot>().selectedType * Mathf.Pow(1.5F, componentLevel));
-				hudSlot.GetComponent<HUDSlot>().title.text = "Upgrade " + name + " (&" + cost.ToString() + ")";
-				componentLevelTextMesh.text = "Lvl" + componentLevel.ToString();
-				hudSlot.GetComponent<HUDSlot>().Construct();
-				transform.parent.GetComponent<PlanetaryControls>().playerMoney -= (int) hudSlot.GetComponent<HUDSlot>().selectedType;
-				transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
+				transform.parent.GetComponent<ShipControls>().playerMoney -= cost;
+				cost = Mathf.RoundToInt(cost * 1.5F);
 				audioSource.clip = construction;
 				audioSource.Play ();
+				actionWord = "Upgrade " + thisType + "\nto Lvl" + (componentLevel + 1).ToString() + "\nfor &" + cost.ToString();
 			}
 			else{
 				NotEnoughFunds();
@@ -162,13 +131,38 @@ public class ComponentScript : MonoBehaviour {
 			Upgrade();
 		}
 	}	
-
+	
+	public void SetComponent(string type, float level){
+		componentLevel = level;
+		switch(type){
+		case "Cannon":
+			thisType = ComponentType.Cannon;
+			break;
+		case "Rocket":
+			thisType = ComponentType.Rocket;
+			break;
+		case "Laser":
+			thisType = ComponentType.Laser;
+			break;
+		case "Repair":
+			thisType = ComponentType.Repair;
+			break;
+		case "Ram":
+			thisType = ComponentType.Ram;
+			break;
+		case "Shield":
+			thisType = ComponentType.Shield;
+			break;
+		default:
+			thisType = ComponentType.Empty;
+			break;
+		}
+	}
 	
 	public void Construct(ComponentType type){
 		thisType = type;
 		if(type == ComponentType.Empty){
 			componentLevel = 0;
-			componentLevelTextMesh.text = "";
 		}
 		switch(type){
 		case ComponentType.Cannon:
@@ -183,9 +177,13 @@ public class ComponentScript : MonoBehaviour {
 			componentArt.renderer.enabled = true;
 			componentArt.renderer.material = laserMaterial;
 			break;
-		case ComponentType.Factory:
+		case ComponentType.Ram:
 			componentArt.renderer.enabled = true;
-			componentArt.renderer.material = factoryMaterial;
+			componentArt.renderer.material = ramMaterial;
+			break;
+		case ComponentType.Shield:
+			componentArt.renderer.enabled = true;
+			componentArt.renderer.material = shieldMaterial;
 			break;
 		case ComponentType.Repair:
 			componentArt.renderer.enabled = true;
@@ -197,45 +195,49 @@ public class ComponentScript : MonoBehaviour {
 		}
 	}
 	
-	public void DelayAction(float thisDelay) {
-		if(!is_actionDelayed){
-			is_actionDelayed = true;
-			delayDuration = thisDelay;
-			delayTime = Time.time;
-		}
-	}
-	
 	public void Action() { 
-		if(is_componentReady){
-			progressBar.GetComponent<ProgressBar>().measure = 1;
-			progressBar.GetComponent<ProgressBar>().measureCap = 1;		
-			is_componentReady = false;
-			lastComponentUse = Time.time;
-			switch(thisType){
-			case ComponentType.Cannon:
-				FireCannon();
-				break;
-				
-			case ComponentType.Factory:
-				CollectFactory();
-				break;
-				
-			case ComponentType.Laser:
-				FireLaser();
-				break;
-				
-			case ComponentType.Repair:
-				RepairPlanet();
-				break;
-				
-			case ComponentType.Rocket:
-				FireRocket();
-				break;
-				
-			default:
-				break;
+		switch(transform.parent.GetComponent<ShipControls>().thisPlayerState){
+		case PlayerState.Building:
+			Construct();
+			break;
+		case PlayerState.Fighting:
+			if(is_componentReady){
+				//progressBar.GetComponent<ProgressBar>().measure = 1;
+				//progressBar.GetComponent<ProgressBar>().measureCap = 1;		
+				is_componentReady = false;
+				lastComponentUse = Time.time;
+				switch(thisType){
+				case ComponentType.Cannon:
+					FireCannon();
+					break;
+					
+				case ComponentType.Laser:
+					FireLaser();
+					break;
+					
+				case ComponentType.Repair:
+					RepairShip();
+					break;
+					
+				case ComponentType.Rocket:
+					FireRocket();
+					break;
+					
+				case ComponentType.Shield:
+					break;
+					
+				case ComponentType.Ram:
+					break;
+					
+				default:
+					break;
+				}
 			}
-			progressBar.GetComponent<ProgressBar>().measureCap = componentCooldown;	
+				//progressBar.GetComponent<ProgressBar>().measureCap = componentCooldown;	
+			break;
+				
+		default:
+			break;
 		}
 	}
 		
@@ -255,20 +257,12 @@ public class ComponentScript : MonoBehaviour {
 		audioSource.Play ();
 	}
 	
-	void CollectFactory () {
-		componentCooldown = 5;
-		transform.parent.GetComponent<PlanetaryControls>().playerMoney += 5 * (int) componentLevel;
-		transform.parent.GetComponent<PlanetaryControls>().moneyText.text = "&" + transform.parent.GetComponent<PlanetaryControls>().playerMoney.ToString();
-		audioSource.clip = factoryActivate;
-		audioSource.Play ();
-	}
-	
-	void RepairPlanet () {
-		if(transform.parent.GetComponent<PlanetaryControls>().planetaryHealth < (100 - (5 + 2 * componentLevel))){
-			transform.parent.GetComponent<PlanetaryControls>().planetaryHealth += (5 + 2 * componentLevel);
+	void RepairShip () {
+		if(transform.parent.GetComponent<ShipControls>().playerHealth < (100 - (5 + 2 * componentLevel))){
+			transform.parent.GetComponent<ShipControls>().playerHealth += (5 + 2 * componentLevel);
 		}
-		else if(transform.parent.GetComponent<PlanetaryControls>().planetaryHealth < 100){
-			transform.parent.GetComponent<PlanetaryControls>().planetaryHealth = 100;
+		else if(transform.parent.GetComponent<ShipControls>().playerHealth < 100){
+			transform.parent.GetComponent<ShipControls>().playerHealth = 100;
 		}
 		componentCooldown = 10;
 		audioSource.clip = repairActivate;
@@ -290,10 +284,10 @@ public class ComponentScript : MonoBehaviour {
 	}
 	
 	public void Reset () {
-		progressBar.GetComponent<ProgressBar>().measure = 1;
-		progressBar.GetComponent<ProgressBar>().measureCap = 1;
+		//progressBar.GetComponent<ProgressBar>().measure = 1;
+		//progressBar.GetComponent<ProgressBar>().measureCap = 1;
 		Construct(ComponentType.Empty);
-		hudSlot.GetComponent<HUDSlot>().Reset();
+		cost = 15;
+		actionWord = "Construct " + NetworkAndMenu.selectedType.ToString() + "\nin " + name + "\nfor &" + cost.ToString();
 	}
-*/
 }
