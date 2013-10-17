@@ -91,6 +91,9 @@ public class ShipControls: MonoBehaviour {
 				heavenlyBodies[i] = heavenlyBodyParent.GetChild(i);
 			}
 			Death();
+			rigidbody.constraints = RigidbodyConstraints.FreezePositionZ;
+			rigidbody.constraints = RigidbodyConstraints.FreezeRotationX;
+			rigidbody.constraints = RigidbodyConstraints.FreezeRotationY;
 		}
 		else{
 			Destroy(gameObject);
