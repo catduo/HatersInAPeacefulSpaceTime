@@ -58,16 +58,16 @@ public class Projectile : MonoBehaviour {
 	}
 	
 	void OnTriggerExit(Collider other){
-		if(other.name == "RHBounds" && transform.position.x > 0){
+		if(other.name == "RHBounds" && rigidbody.velocity.x > 0){
 			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
 		}
-		if(other.name == "LHBounds" && transform.position.x < 0){
+		else if(other.name == "LHBounds" && rigidbody.velocity.x < 0){
 			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
 		}
-		else if(other.name == "TVBounds" && transform.position.y > 0){
+		else if(other.name == "TVBounds" && rigidbody.velocity.y > 0){
 			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
-		else if(other.name == "BVBounds" && transform.position.y < 0){
+		else if(other.name == "BVBounds" && rigidbody.velocity.y < 0){
 			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
 	}

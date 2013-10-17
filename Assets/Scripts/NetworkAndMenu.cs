@@ -98,8 +98,8 @@ public class NetworkAndMenu : MonoBehaviour {
 		is_menu = false;
 		is_connecting = false;
 		Destroy(playerObject);
-		playerObject = (GameObject) Network.Instantiate(shipObject, Vector3.zero, Quaternion.identity, 0);
-		playerObject.GetComponent<ShipControls>().SetState("fighting");
+		playerObject = (GameObject) Network.Instantiate(shipObject, new Vector3(-5, 5, 0), Quaternion.identity, 0);
+		playerObject.GetComponent<ShipControls>().SetState("building");
 		is_controller = true;
 	}
 	
@@ -193,7 +193,7 @@ public class NetworkAndMenu : MonoBehaviour {
 				is_controller = true;
 				Destroy(playerObject);
 				playerObject = (GameObject) GameObject.Instantiate(shipObject, Vector3.zero, Quaternion.identity);
-				playerObject.GetComponent<ShipControls>().SetState("fighting");
+				playerObject.GetComponent<ShipControls>().SetState("building");
 			}
 	        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Instructions")){
 				is_instructions = true;

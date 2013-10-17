@@ -51,6 +51,10 @@ public class ShipControls: MonoBehaviour {
 	private Vector2 engineFiring;
 	private bool is_client = false;
 	
+	private Transform heavenlyBodyParent;
+	private Transform[] heavenlyBodies;
+	public float gravitationalConstant = 3F;
+	
 	// Use this for initialization
 	void Start () {
 		if(PlayerPrefs.GetInt("PlayerMoney") > 0){
@@ -80,6 +84,17 @@ public class ShipControls: MonoBehaviour {
 			transform.localScale = new Vector3(5,5,0);
 			lastMoneyTime = Time.time - moneyRate;
 		}
+		else if(Network.isServer){
+			heavenlyBodyParent = GameObject.Find("Planets").transform;
+			heavenlyBodies = new Transform[heavenlyBodyParent.childCount];
+			for(int i = 0; i < heavenlyBodyParent.childCount; i++){
+				heavenlyBodies[i] = heavenlyBodyParent.GetChild(i);
+			}
+			Death();
+		}
+		else{
+			Destroy(gameObject);
+		}
 		upType = "Empty";
 		rightType = "Empty";
 		leftType = "Empty";
@@ -94,6 +109,13 @@ public class ShipControls: MonoBehaviour {
 	void FixedUpdate(){
 		if(is_client){
 			Engines(DPad.horizontal, DPad.vertical);
+		}
+		else{
+			for(int i = 0; i < heavenlyBodyParent.childCount; i++){
+				float force = -(heavenlyBodies[i].localScale.x * gravitationalConstant / Vector3.SqrMagnitude(new Vector3(transform.position.x - heavenlyBodies[i].position.x, transform.position.y - heavenlyBodies[i].position.y, 0)));
+				Vector3 direction = Vector3.Normalize(new Vector3(transform.position.x - heavenlyBodies[i].position.x, transform.position.y - heavenlyBodies[i].position.y, 0));
+				rigidbody.AddForce(force * direction);
+			}
 		}
 	}
 	
@@ -203,23 +225,28 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void EngineUpgrade(){
-		acceleration *= engineMultiplier;
-		maxSpeed *= engineMultiplier;
-		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, engineLevel) * 15);
-		engineLevel++;
+		if(playerMoney >= Mathf.RoundToInt(Mathf.Pow (1.5F, engineLevel) * 15)){
+			acceleration *= engineMultiplier;
+			maxSpeed *= engineMultiplier;
+			playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, engineLevel) * 15);
+			engineLevel++;
+		}
 	}
 	
 	void FactoryUpgrade(){
-		moneyRate /= moneyMultiplier;
-		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, moneyLevel) * 15);
-		moneyLevel++;
-		
+		if(playerMoney >= Mathf.RoundToInt(Mathf.Pow (1.5F, moneyLevel) * 15)){
+			moneyRate /= moneyMultiplier;
+			playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, moneyLevel) * 15);
+			moneyLevel++;
+		}
 	}
 	
 	void HealthUpgrade(){
-		maxHealth *= healthMultiplier;
-		playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, healthLevel) * 15);
-		healthLevel++;
+		if(playerMoney >= Mathf.RoundToInt(Mathf.Pow (1.5F, healthLevel) * 15)){
+			maxHealth *= healthMultiplier;
+			playerMoney -= Mathf.RoundToInt(Mathf.Pow (1.5F, healthLevel) * 15);
+			healthLevel++;
+		}
 	}
 	
 	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel){
@@ -230,15 +257,6 @@ public class ShipControls: MonoBehaviour {
 			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel);
 		}
 		else{
-			up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
-			right.GetComponent<ComponentScript>().SetComponent(newRightType, newRightLevel);
-			left.GetComponent<ComponentScript>().SetComponent(newLeftType, newLeftLevel);
-			engineLevel = 0;
-			for(int i = 0; i < newEngineLevel; i++){
-				acceleration *= engineMultiplier;
-				maxSpeed *= engineMultiplier;
-				engineLevel++;
-			}
 			for(int i = 0; i < transform.childCount; i++){
 				Transform thisChild = transform.GetChild(i);
 				if(thisChild.renderer != null){
@@ -261,6 +279,15 @@ public class ShipControls: MonoBehaviour {
 			}
 			if(collider != null){
 				collider.enabled = true;
+			}
+			up.GetComponent<ComponentScript>().SetComponent(newUpType, newUpLevel);
+			right.GetComponent<ComponentScript>().SetComponent(newRightType, newRightLevel);
+			left.GetComponent<ComponentScript>().SetComponent(newLeftType, newLeftLevel);
+			engineLevel = 0;
+			for(int i = 0; i < newEngineLevel; i++){
+				acceleration *= engineMultiplier;
+				maxSpeed *= engineMultiplier;
+				engineLevel++;
 			}
 		}
 	}
@@ -381,16 +408,16 @@ public class ShipControls: MonoBehaviour {
 	}
 	
 	void OnTriggerExit(Collider other){
-		if(other.name == "RHBounds" && transform.position.x > 0){
+		if(other.name == "RHBounds" && rigidbody.velocity.x > 0){
 			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
 		}
-		if(other.name == "LHBounds" && transform.position.x < 0){
+		else if(other.name == "LHBounds" && rigidbody.velocity.x < 0){
 			transform.position = new Vector3(-transform.position.x, transform.position.y, transform.position.z);
 		}
-		else if(other.name == "TVBounds" && transform.position.y > 0){
+		else if(other.name == "TVBounds" && rigidbody.velocity.y > 0){
 			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
-		else if(other.name == "BVBounds" && transform.position.y < 0){
+		else if(other.name == "BVBounds" && rigidbody.velocity.y < 0){
 			transform.position = new Vector3(transform.position.x, -transform.position.y, transform.position.z);
 		}
 	}
