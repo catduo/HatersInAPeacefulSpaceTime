@@ -260,14 +260,16 @@ public class ShipControls: MonoBehaviour {
 		}
 	}
 	
-	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel, Color thisShipColor, Color thisCharacterColor, string thisCharacter){
+	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel, float r1, float g1, float b1, float r2, float g2, float b2, string thisCharacter){
 		thisPlayerState = PlayerState.Fighting;
 		if(is_client){
 			playerHealth = maxHealth;
 			//change ui and send message to launch, change state
-			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel, thisShipColor, thisCharacterColor, thisCharacter);
+			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel, r1, g1, b1, r2, g2, b2, thisCharacter);
 		}
 		else{
+			Color thisCharacterColor = new Color(r1, g1, b1, 1);
+			Color thisShipColor = new Color(r2, g2, b2, 1);
 			Customize(thisShipColor, thisCharacterColor, thisCharacter);
 			for(int i = 0; i < transform.childCount; i++){
 				Transform thisChild = transform.GetChild(i);

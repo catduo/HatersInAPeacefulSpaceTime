@@ -248,7 +248,7 @@ public class NetworkAndMenu : MonoBehaviour {
 			switch(playerObject.GetComponent<ShipControls>().thisPlayerState){
 			case PlayerState.Building:
 			    if (GUI.Button(WorldRect(new Rect(-8,10,5,2)), "Fight")){
-					playerObject.GetComponent<ShipControls>().Spawn(0, "", 0, "", 0, "", 0, shipColor, characterColor, character);
+					playerObject.GetComponent<ShipControls>().Spawn(0, "", 0, "", 0, "", 0, r1, g1, b1, r2, g2, b2, character);
 				}
 			    if (GUI.Button(WorldRect(new Rect(-13,8,2,2)), cannonTexture)){
 					selectedType = ComponentType.Cannon;
