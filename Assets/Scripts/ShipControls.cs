@@ -55,6 +55,13 @@ public class ShipControls: MonoBehaviour {
 	private Transform[] heavenlyBodies;
 	public float gravitationalConstant = 3F;
 	
+	private int dpadTouch = -1;
+	private float initialX;
+	private float initialY;
+	private float horizontal;
+	private float vertical;
+	private bool is_dpadUse = false;
+	
 	// Use this for initialization
 	void Start () {
 		if(PlayerPrefs.GetInt("PlayerMoney") > 0){
@@ -91,9 +98,9 @@ public class ShipControls: MonoBehaviour {
 				heavenlyBodies[i] = heavenlyBodyParent.GetChild(i);
 			}
 			Death();
-			rigidbody.constraints = RigidbodyConstraints.FreezePositionZ;
 			rigidbody.constraints = RigidbodyConstraints.FreezeRotationX;
 			rigidbody.constraints = RigidbodyConstraints.FreezeRotationY;
+			rigidbody.constraints = RigidbodyConstraints.FreezePositionZ;
 		}
 		else{
 			Destroy(gameObject);
@@ -111,7 +118,7 @@ public class ShipControls: MonoBehaviour {
 	
 	void FixedUpdate(){
 		if(is_client){
-			Engines(DPad.horizontal, DPad.vertical);
+			Engines(horizontal, vertical);
 		}
 		else if(thisPlayerState == PlayerState.Fighting){
 			for(int i = 0; i < heavenlyBodyParent.childCount; i++){
@@ -126,6 +133,7 @@ public class ShipControls: MonoBehaviour {
 	void Update () {
 		if(is_client){
 			Income ();
+			DPad ();
 		}
 	}
 	
@@ -142,8 +150,8 @@ public class ShipControls: MonoBehaviour {
 		if(thisPlayerState == PlayerState.Fighting){
 			rigidbody.angularVelocity = Vector3.zero;
 			if(is_client){
-				thisVertical = DPad.vertical;
-				thisHorizontal = DPad.horizontal;
+				thisVertical = vertical;
+				thisHorizontal = horizontal;
 				//show animations, but don't move anything
 				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 2F), 2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 2F), 2F));
@@ -155,7 +163,7 @@ public class ShipControls: MonoBehaviour {
 				rightEngine.GetComponent<Engine>().Power(Mathf.Min( ((0 - thisVertical - thisHorizontal * 2) * 0.2F), 0.2F));
 				leftEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisHorizontal * 2 - thisVertical) * 0.2F), 0.2F));
 				mainEngine.GetComponent<Engine>().Power(Mathf.Min( ((thisVertical) * 0.4F), 0.4F));
-				if(DPad.vertical > 0){
+				if(vertical > 0){
 					if(rigidbody.velocity.magnitude < maxSpeed){
 						rigidbody.AddRelativeForce(0,thisVertical * acceleration,0);
 					}
@@ -252,14 +260,15 @@ public class ShipControls: MonoBehaviour {
 		}
 	}
 	
-	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel){
+	[RPC] public void Spawn(int newUpLevel, string newUpType, int newRightLevel, string newRightType, int newLeftLevel, string newLeftType, int newEngineLevel, Color thisShipColor, Color thisCharacterColor, string thisCharacter){
 		thisPlayerState = PlayerState.Fighting;
 		if(is_client){
 			playerHealth = maxHealth;
 			//change ui and send message to launch, change state
-			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel);
+			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel, thisShipColor, thisCharacterColor, thisCharacter);
 		}
 		else{
+			Customize(thisShipColor, thisCharacterColor, thisCharacter);
 			for(int i = 0; i < transform.childCount; i++){
 				Transform thisChild = transform.GetChild(i);
 				if(thisChild.renderer != null){
@@ -431,5 +440,89 @@ public class ShipControls: MonoBehaviour {
 				Damage(other.GetComponent<ComponentScript>().componentLevel * 30);
 			}
 		}
+	}
+	
+	void DPad(){
+		if(thisPlayerState == PlayerState.Fighting){
+			for (int i = 0; i < Input.touchCount; i++){
+				Touch touch = Input.GetTouch(i);
+				if(touch.phase == TouchPhase.Began && Camera.main.ScreenToWorldPoint(touch.position).x < -2){
+					dpadTouch = touch.fingerId;
+					initialX = touch.position.x;
+					initialY = touch.position.y;
+				}
+				is_dpadUse = true;
+			}
+			if(dpadTouch > -1){
+				if(Input.GetTouch(dpadTouch).phase == TouchPhase.Canceled || Input.GetTouch(dpadTouch).phase == TouchPhase.Ended){
+					is_dpadUse = false;
+				}
+				if(is_dpadUse){
+					Touch touch = Input.GetTouch(dpadTouch);
+					if(touch.position.x - initialX > 100){
+						horizontal = 1;
+					}
+					else if(touch.position.x - initialX < -100){
+						horizontal = -1;
+					}
+					else{
+						horizontal = (touch.position.x - initialX)/100;
+					}
+					if(touch.position.y - initialY > 100){
+						vertical = 1;
+					}
+					else if(touch.position.y - initialY < -100){
+						vertical = -1;
+					}
+					else{
+						vertical = (touch.position.y - initialY)/100;
+					}
+				}
+				else{
+					vertical = 0;
+					horizontal = 0;
+				}
+			}
+		}
+		if(thisPlayerState == PlayerState.Fighting){
+			if(Input.GetMouseButtonDown(0) && Camera.main.ScreenToWorldPoint(Input.mousePosition).x < -2){
+				is_dpadUse = true;
+				initialX = Input.mousePosition.x;
+				initialY = Input.mousePosition.y;
+			}
+			if(Input.GetMouseButtonUp(0)){
+				is_dpadUse = false;
+			}
+			if(is_dpadUse){
+				if(Input.mousePosition.x - initialX > 100){
+					horizontal = 1;
+				}
+				else if(Input.mousePosition.x - initialX < -100){
+					horizontal = -1;
+				}
+				else{
+					horizontal = (Input.mousePosition.x - initialX)/100;
+				}
+				if(Input.mousePosition.y - initialY > 100){
+					vertical = 1;
+				}
+				else if(Input.mousePosition.y - initialY < -100){
+					vertical = -1;
+				}
+				else{
+					vertical = (Input.mousePosition.y - initialY)/100;
+				}
+			}
+			else{
+				vertical = 0;
+				horizontal = 0;
+			}
+		}
+	}
+	
+	public void Customize(Color shipColor, Color characterColor, string character){
+		renderer.material.color = shipColor;
+		transform.FindChild("Character").GetComponent<TextMesh>().color = characterColor;
+		transform.FindChild("Character").GetComponent<TextMesh>().text = character;
 	}
 }

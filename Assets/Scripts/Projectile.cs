@@ -12,9 +12,12 @@ public class Projectile : MonoBehaviour {
 	public float originalXScale;
 	private bool is_exploding;
 	private float explosionTime;
+	private float startTime;
+	private float lifeTime = 5;
 	
 	// Use this for initialization
 	void Start () {
+		startTime = Time.time;
 		transform.parent = GameObject.Find ("Projectiles").transform;
 		heavenlyBodyParent = GameObject.Find("Planets").transform;
 		heavenlyBodies = new Transform[heavenlyBodyParent.childCount];
@@ -40,6 +43,18 @@ public class Projectile : MonoBehaviour {
 		else if(Time.time > explosionTime + 1 && is_exploding){
 			Destroy(gameObject);
 		}
+		if(lifeTime + startTime < Time.time){
+			if(name != "Laser(Clone)"){
+				is_exploding = true;
+				transform.FindChild("Explosion").particleSystem.Play();
+				explosionTime = Time.time;
+				GetComponent<AudioSource>().Play();
+				collider.enabled = false;
+			}
+			else{
+				Destroy(gameObject);
+			}
+		}
 	}
 	
 	void OnCollisionEnter(Collision collision) {
@@ -54,6 +69,9 @@ public class Projectile : MonoBehaviour {
 			else{
 				Destroy(gameObject);
 			}			
+		}
+		else{
+			Destroy(gameObject);
 		}
 	}
 	

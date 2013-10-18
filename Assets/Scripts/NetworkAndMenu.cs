@@ -14,12 +14,23 @@ public class NetworkAndMenu : MonoBehaviour {
 	private bool is_instructions = false;
 	private bool is_decidingToHost = false;
 	private bool is_controller = false;
+	private bool is_customizing = false;
 	static public bool is_menu = true;
 	static public bool is_gameOver = false;
 	private bool is_credits = false;
 	public Font font;
 	public GameObject shipObject;
 	private GameObject playerObject;
+	
+	private Color shipColor = new Color(1,1,1,1);
+	private Color characterColor = new Color(1,1,1,1);
+	private string character = "D";
+	private float r1 = 1;
+	private float r2 = 1;
+	private float g1 = 1;
+	private float g2 = 1;
+	private float b1 = 1;
+	private float b2 = 1;
 	
 	static public ComponentType selectedType;
 	public Texture2D cannonTexture;
@@ -213,11 +224,31 @@ public class NetworkAndMenu : MonoBehaviour {
 				is_menu = false;
 			}
 		}
+		else if(is_customizing){
+			GUI.Box(WorldRect(new Rect(-10,8,20,10)), "Choose your colors and character");
+			if (GUI.Button(WorldRect(new Rect(-3,-2,6,2)), "Done")){
+				is_customizing = false;
+				GameObject.Find ("PlayerShip(Clone)").GetComponent<ShipControls>().Customize(shipColor, characterColor, character);
+			}
+			GUI.TextArea(WorldRect(new Rect(-9,7,4,1)), "Choose a Character");
+			character = GUI.TextField(WorldRect(new Rect(-5,7,2,1)), character);
+			GUI.TextArea(WorldRect(new Rect(-9,5,8,1)), "Character Color (RGB)");
+			r1 = GUI.VerticalSlider(WorldRect(new Rect(-9,3,2,4)), r1, 1, 0);
+			g1 = GUI.VerticalSlider(WorldRect(new Rect(-6,3,2,4)), g1, 1, 0);
+			b1 = GUI.VerticalSlider(WorldRect(new Rect(-3,3,2,4)), b1, 1, 0);
+			GUI.TextArea(WorldRect(new Rect(-0,5,8,1)), "Ship Color (RGB)");
+			r2 = GUI.VerticalSlider(WorldRect(new Rect(0,3,2,4)), r2, 1, 0);
+			g2 = GUI.VerticalSlider(WorldRect(new Rect(3,3,2,4)), g2, 1, 0);
+			b2 = GUI.VerticalSlider(WorldRect(new Rect(6,3,2,4)), b2, 1, 0);
+			shipColor = new Color(r2, g2, b2, 1);
+			characterColor = new Color (r1, g1, b1, 1);
+			character = character[0].ToString();
+		}
 		else if(is_controller){
 			switch(playerObject.GetComponent<ShipControls>().thisPlayerState){
 			case PlayerState.Building:
 			    if (GUI.Button(WorldRect(new Rect(-8,10,5,2)), "Fight")){
-					playerObject.GetComponent<ShipControls>().Spawn(0, "", 0, "", 0, "", 0);
+					playerObject.GetComponent<ShipControls>().Spawn(0, "", 0, "", 0, "", 0, shipColor, characterColor, character);
 				}
 			    if (GUI.Button(WorldRect(new Rect(-13,8,2,2)), cannonTexture)){
 					selectedType = ComponentType.Cannon;
@@ -261,6 +292,9 @@ public class NetworkAndMenu : MonoBehaviour {
 				}
 				GUI.DrawTexture(WorldRect(new Rect(-10,6,4,4)), selected);
 				GUI.Box(WorldRect(new Rect(-13,2,10,12)), componentDescription);
+			    if (GUI.Button(WorldRect(new Rect(3,0,5,5)), "Customize")){
+					is_customizing = true;
+				}
 			    if (GUI.Button(WorldRect(new Rect(3,5,5,5)), playerObject.GetComponent<ShipControls>().up.GetComponent<ComponentScript>().actionWord)){
 					playerObject.GetComponent<ShipControls>().Action("up");
 				}
@@ -284,6 +318,7 @@ public class NetworkAndMenu : MonoBehaviour {
 				break;
 				
 			case PlayerState.Fighting:
+				GUI.Box(WorldRect(new Rect(-13,2,10,12)), "Use this area\nas a Dpad");
 			    if (GUI.Button(WorldRect(new Rect(-8,10,5,2)), "Die")){
 					playerObject.GetComponent<ShipControls>().Death();
 				}

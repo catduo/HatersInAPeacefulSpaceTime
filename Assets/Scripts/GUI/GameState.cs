@@ -44,9 +44,10 @@ public class GameState : MonoBehaviour {
 	
 	//find everything that has a touch initiated on it and let it know
 	void GetTouch() {	
-		InputXYs = new Vector2[Input.touches.Length];
-		foreach(Touch touch in Input.touches){
-			InputXYs[touch.fingerId] = Camera.main.ScreenToWorldPoint(touch.position);
+		InputXYs = new Vector2[Input.touchCount];
+		for (int i = 0; i < Input.touchCount; i++){
+			Touch touch = Input.GetTouch(i);
+			InputXYs[i] = Camera.main.ScreenToWorldPoint(touch.position);
 			if(touch.phase == TouchPhase.Began){
 				previousPosition = touch.position;
 	            Ray ray = Camera.main.ScreenPointToRay(touch.position);
@@ -74,6 +75,7 @@ public class GameState : MonoBehaviour {
 				drawSwipe.SetVertexCount(0);
 				vertexCount = 0;
 			}
+			/*
 			//create a collision with everything that is swiped by touch
 			if(touch.phase == TouchPhase.Moved){
 				if(previousPosition != new Vector3 (1000,1000,1000) && Vector3.Distance(previousPosition, touch.position) > swipeThreshhold && vertexCount < vertexMax){
@@ -95,6 +97,7 @@ public class GameState : MonoBehaviour {
 					vertexCount = 0;
 				}
 			}
+			*/
 		}
 	}
 	
