@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class NetworkAndMenu : MonoBehaviour {
-	
 	private const string typeName = "MiniBrawl";
-	private const string gameName = "MiniBrawl";
+	static public string gameName;
 	private float lastTry;
 	private float retryTime = 1;
 	static public bool is_online = false;
 	static public bool is_local = false;
 	private bool is_hosting = false;
 	private bool is_connecting = false;
+	private bool failedToJoin = false;
 	private bool is_instructions = false;
 	private bool is_decidingToHost = false;
 	private bool is_controller = false;
@@ -21,6 +22,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	public Font font;
 	public GameObject shipObject;
 	private GameObject playerObject;
+	private String joinServerCode;
 	
 	private Color shipColor = new Color(1,1,1,1);
 	private Color characterColor = new Color(1,1,1,1);
@@ -44,6 +46,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	 
 	private void StartServer(){
 	    Network.InitializeServer(32, 25000, !Network.HavePublicAddress());
+		gameName = Guid.NewGuid().ToString().Split("-")[1];
 	    MasterServer.RegisterHost(typeName, gameName);
 	}
 	
@@ -79,29 +82,30 @@ public class NetworkAndMenu : MonoBehaviour {
 		Destroy(playerObject);
 	}
 	
-	private HostData[] hostList = new HostData[] {};
-	 
 	private void RefreshHostList(){
 	    MasterServer.RequestHostList(typeName);
 	}
 	 
 	void OnMasterServerEvent(MasterServerEvent msEvent){
 	    if (msEvent == MasterServerEvent.HostListReceived){
-	        hostList = MasterServer.PollHostList();
 			if(is_connecting){
-				Debug.Log ("try to connect");
-				if(hostList.Length > 0){
-					JoinServer(hostList[0]);
-					is_menu = false;
+				HostData[] hostList = MasterServer.PollHostList();
+				foreach (HostData hostData in hostList) {
+					if (hostData.gameName.Equals(joinServerCode)) {
+						Network.Connect(hostData);
+					}
 				}
-				else{
-					RefreshHostList();
-				}
+
+				failedToJoin = true;
 			}
 		}
 	}
-	private void JoinServer(HostData hostData){
-	    Network.Connect(hostData);
+	
+	private void JoinServer(String serverCode){
+		failedToJoin = false;
+		joinServerCode = serverCode;
+		is_connecting = true;
+		RefreshHostList();
 	}
 	 
 	void OnConnectedToServer(){
