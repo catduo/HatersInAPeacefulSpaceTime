@@ -15,6 +15,7 @@ public class NetworkAndMenu : MonoBehaviour {
 	private bool is_decidingToHost = false;
 	private bool is_controller = false;
 	private bool is_customizing = false;
+	private bool has_serverName = false;
 	static public bool is_menu = true;
 	static public bool is_gameOver = false;
 	private bool is_credits = false;
@@ -76,6 +77,7 @@ public class NetworkAndMenu : MonoBehaviour {
 		is_menu = true;
 		is_online = false;
 		is_controller = false;
+		has_serverName = false;
 		Destroy(playerObject);
 	}
 	
@@ -127,6 +129,7 @@ public class NetworkAndMenu : MonoBehaviour {
 				Disconnect();
 				Application.LoadLevel("Controller");
 			}
+			GUI.Box(WorldRect(new Rect(-13,8,4,2)), "Game: " + gameName);
 		}
 		else if(is_gameOver){
 			GUI.Box(WorldRect(new Rect(-3,8,6,2)), "Game Over");
@@ -154,25 +157,38 @@ public class NetworkAndMenu : MonoBehaviour {
 			}
 		}
 		else if(is_connecting){
-			GUI.Box(WorldRect(new Rect(-4,10,8,1)), "Haters Gonna Hate");
-			GUI.Box(WorldRect(new Rect(-3,8,6,2)), "Looking for Server...");
-			if (GUI.Button(WorldRect(new Rect(-3,5,6,2)), "Stop Looking")){
-				is_connecting = false;
-				is_online = false;
-				Disconnect();
-			}
-	        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Instructions")){
-				is_instructions = true;
-			}
-	        if (GUI.Button(WorldRect(new Rect(-3,-1,6,2)), "Credits")){
-				is_credits = true;
-			}
-	        if (GUI.Button(WorldRect(new Rect(-3,-4,6,2)), "Mute")){
-				if(AudioListener.volume == 1){
-					AudioListener.volume = 0;
+			if(has_serverName){
+				GUI.Box(WorldRect(new Rect(-4,10,8,1)), "Haters Gonna Hate");
+				GUI.Box(WorldRect(new Rect(-3,8,6,2)), "Looking for Server...");
+				if (GUI.Button(WorldRect(new Rect(-3,5,6,2)), "Stop Looking")){
+					is_connecting = false;
+					is_online = false;
+					Disconnect();
 				}
-				else{
-					AudioListener.volume = 1;
+		        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Instructions")){
+					is_instructions = true;
+				}
+		        if (GUI.Button(WorldRect(new Rect(-3,-1,6,2)), "Credits")){
+					is_credits = true;
+				}
+		        if (GUI.Button(WorldRect(new Rect(-3,-4,6,2)), "Mute")){
+					if(AudioListener.volume == 1){
+						AudioListener.volume = 0;
+					}
+					else{
+						AudioListener.volume = 1;
+					}
+				}
+			}
+			else{
+				GUI.Box(WorldRect(new Rect(-4,6,8,6)), "Type in Host Code");
+				gameName = GUI.TextField(WorldRect(new Rect(-2,4,2,1)), gameName);
+		        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Back")){
+					is_decidingToHost = false;
+					is_menu = true;
+				}
+		        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Back")){
+					has_serverName = true;
 				}
 			}
 		}

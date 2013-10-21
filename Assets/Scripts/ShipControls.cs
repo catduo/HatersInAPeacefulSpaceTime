@@ -268,6 +268,7 @@ public class ShipControls: MonoBehaviour {
 			networkView.RPC("Spawn", RPCMode.Server, upLevel, upType, rightLevel, rightType, leftLevel, leftType, engineLevel, r1, g1, b1, r2, g2, b2, thisCharacter);
 		}
 		else{
+			transform.parent = GameObject.Find("Planets").transform;
 			Color thisCharacterColor = new Color(r1, g1, b1, 1);
 			Color thisShipColor = new Color(r2, g2, b2, 1);
 			Customize(thisShipColor, thisCharacterColor, thisCharacter);
