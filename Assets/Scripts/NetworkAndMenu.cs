@@ -4,7 +4,7 @@ using System;
 
 public class NetworkAndMenu : MonoBehaviour {
 	private const string typeName = "MiniBrawl";
-	static public string gameName;
+	static public string gameName = "Enter Game ID";
 	private float lastTry;
 	private float retryTime = 1;
 	static public bool is_online = false;
@@ -47,7 +47,8 @@ public class NetworkAndMenu : MonoBehaviour {
 	 
 	private void StartServer(){
 	    Network.InitializeServer(32, 25000, !Network.HavePublicAddress());
-		gameName = Guid.NewGuid().ToString().Split("-")[1];
+		gameName = Guid.NewGuid().ToString().Split('-')[1];
+		Debug.Log (gameName);
 	    MasterServer.RegisterHost(typeName, gameName);
 	}
 	
@@ -62,6 +63,10 @@ public class NetworkAndMenu : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		MasterServer.ipAddress = "192.168.1.57";
+		MasterServer.port = 23466;
+		Network.natFacilitatorIP = "192.168.1.57";
+		Network.natFacilitatorPort = 23466;
 		Application.targetFrameRate = 24;
 		lastTry = Time.time;
 		if(Application.loadedLevelName == "Game"){
@@ -91,10 +96,12 @@ public class NetworkAndMenu : MonoBehaviour {
 	void OnMasterServerEvent(MasterServerEvent msEvent){
 	    if (msEvent == MasterServerEvent.HostListReceived){
 			if(is_connecting){
+				is_connecting = false;
 				HostData[] hostList = MasterServer.PollHostList();
 				foreach (HostData hostData in hostList) {
 					if (hostData.gameName.Equals(joinServerCode)) {
 						Network.Connect(hostData);
+						return;
 					}
 				}
 
@@ -185,24 +192,24 @@ public class NetworkAndMenu : MonoBehaviour {
 				}
 			}
 			else{
-				GUI.Box(WorldRect(new Rect(-4,6,8,6)), "Type in Host Code");
+				GUI.Box(WorldRect(new Rect(-4,6,8,10)), "Type in Host Code");
 				gameName = GUI.TextField(WorldRect(new Rect(-2,4,2,1)), gameName);
 		        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Back")){
 					is_decidingToHost = false;
 					is_menu = true;
 				}
-		        if (GUI.Button(WorldRect(new Rect(-3,2,6,2)), "Back")){
+		        if (GUI.Button(WorldRect(new Rect(-3,-1,6,2)), "Play!")){
 					has_serverName = true;
+					JoinServer(gameName);
 				}
 			}
 		}
 		else if(is_decidingToHost){
 			GUI.Box(WorldRect(new Rect(-4,10,8,1)), "Haters Gonna Hate");
-	        if (GUI.Button(WorldRect(new Rect(-3,8,6,2)), "Play!")){
+	        if (GUI.Button(WorldRect(new Rect(-3,8,6,2)), "Find Game!")){
 	            is_online = true;
 				is_connecting = true;
 				is_decidingToHost = false;
-				RefreshHostList();
 			}
 	        if (GUI.Button(WorldRect(new Rect(-3,5,6,2)), "Host as Server")){
 				Application.LoadLevel("Game");
