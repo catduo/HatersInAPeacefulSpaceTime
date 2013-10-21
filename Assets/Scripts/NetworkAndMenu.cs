@@ -48,8 +48,13 @@ public class NetworkAndMenu : MonoBehaviour {
 	private void StartServer(){
 	    Network.InitializeServer(32, 25000, !Network.HavePublicAddress());
 		gameName = Guid.NewGuid().ToString().Split('-')[1];
-		Debug.Log (gameName);
+		Debug.Log(gameName);
 	    MasterServer.RegisterHost(typeName, gameName);
+		
+		WWWForm form = new WWWForm();
+		form.AddField("action","create");
+		form.AddField ("name",gameName);
+		WWW post_req = new WWW("http://localhost/foo.php",form);
 	}
 	
 	void OnServerInitialized(){
@@ -65,8 +70,8 @@ public class NetworkAndMenu : MonoBehaviour {
 	void Start () {
 		MasterServer.ipAddress = "192.168.1.57";
 		MasterServer.port = 23466;
-		Network.natFacilitatorIP = "192.168.1.57";
-		Network.natFacilitatorPort = 23466;
+		//Network.natFacilitatorIP = "192.168.1.57";
+		//Network.natFacilitatorPort = 23466;
 		Application.targetFrameRate = 24;
 		lastTry = Time.time;
 		if(Application.loadedLevelName == "Game"){
